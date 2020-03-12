@@ -1,0 +1,10 @@
+.git
+node_modules
+dist
+.build
+docker/.data
+*.pyc
+Dockerfile
+.gitignore
+.gitlab-ci.yml
+k8s
