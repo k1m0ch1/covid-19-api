@@ -4,4 +4,4 @@
 /docker/.data
 *.pyc
 
-chromedriver
+/.vscode

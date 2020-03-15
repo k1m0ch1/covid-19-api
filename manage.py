@@ -1,5 +1,8 @@
 import fire
 
+from src import data
+from src.wsgi import app
+
 
 def run_scrapper():
     print("run scrapper")
@@ -10,7 +13,11 @@ def clear_cache():
 
 
 def run():
-    print("run web services")
+    data.case("confirmed")
+
+
+def run_web():
+    app.run(host='0.0.0.0', port=5001, debug=True)
 
 
 def test():

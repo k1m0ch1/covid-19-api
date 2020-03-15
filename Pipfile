@@ -6,10 +6,13 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-sqlalchemy = "*"
 alembic = "*"
 fire = "*"
 psycopg2-binary = "*"
+cachetools = "*"
+requests = "*"
+flask = "*"
+flask-caching = "*"
 
 [requires]
 python_version = "3.7"
