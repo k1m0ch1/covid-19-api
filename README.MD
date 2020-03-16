@@ -1,6 +1,8 @@
 # Coronavirus Disease 19 API Tracker
 
-This is just a simple API tracker for covid-19 latest information for recovered, confirmed and deaths cases. The main purpose of this repo is for bot announcement to whatsapp, telegram and discord about latest cases of covid-19
+This is just a simple API tracker for covid-19 latest information for recovered, confirmed and deaths cases. The main purpose of this repo is for bot announcement to whatsapp, telegram and discord about latest cases of covid-19.
+
+you can try the api here [https;//covid-19api.heroku.com/](https;//covid-19api.heroku.com/)
 
 
 # Endpoint
@@ -64,7 +66,7 @@ gunicorn --config python:src.gunicorn_cfg src.wsgi:app
 ```
 
 ## Next to do :
-- deploy to server for public use
+- ~~deploy to server for public use~~ deployed to [https;//covid-19api.heroku.com/](https;//covid-19api.heroku.com/)
 - add new endpoint for each countries
 - add new endoint `/confirmed` `/deaths` and `/recovered`
 - bot discord
