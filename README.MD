@@ -35,7 +35,7 @@ GET /all
 ```
 
 # Development
-This repo is still on development and
+This repo is still on development and feel free to contribute.
 ## Requirement
 1. Python 3.7
 2. pipenv/ pip
