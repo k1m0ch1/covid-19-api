@@ -6,7 +6,6 @@ This is just a simple API tracker for covid-19 latest information for recovered,
 # Endpoint
 
 ## Get latest information about confirmed, deaths and recovered
----
 ```
 GET /
 ```
@@ -15,7 +14,6 @@ GET /
 {"Confirmed":167447,"Deaths":6440,"Recovered":76034}
 ```
 ## Get latest information about all country cases status
----
 ```
 GET /all
 ```
