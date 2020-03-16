@@ -1,4 +1,4 @@
-bind = "0.0.0.0:8000"
+bind = "0.0.0.0:80"
 
 # Copied from gunicorn.glogging.CONFIG_DEFAULTS
 logconfig_dict = {
