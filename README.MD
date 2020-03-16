@@ -34,6 +34,16 @@ GET /all
 ]
 ```
 
+# Docker
+You can use docker by pull
+```
+docker run --name covid-19-api -p 5001:5001 -d docker.pkg.github.com/k1m0ch1/covid-19-api/covid-19-api:latest run
+```
+or
+```
+docker run --name covid-19-api -p 8000:8000 -d docker.pkg.github.com/k1m0ch1/covid-19-api/covid-19-api:latest run_web_prod
+```
+
 # Development
 This repo is still on development and feel free to contribute.
 ## Requirement
@@ -41,6 +51,17 @@ This repo is still on development and feel free to contribute.
 2. pipenv/ pip
 3. venv/ virtualenv
 
+## Running on development
+```
+pipenv run python manage.py run
+```
+
+## Running on production
+```
+pipenv run python manage.py run_web_prod
+or
+gunicorn --config python:src.gunicorn_cfg src.wsgi:app
+```
 
 ## Next to do :
 - deploy to server for public use
