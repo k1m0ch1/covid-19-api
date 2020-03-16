@@ -1,4 +1,6 @@
-bind = "0.0.0.0:8080"
+import os
+port = os.environ.get('PORT', 5000)
+bind = f"0.0.0.0:{port}"
 
 # Copied from gunicorn.glogging.CONFIG_DEFAULTS
 logconfig_dict = {
