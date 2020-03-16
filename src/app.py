@@ -1,6 +1,6 @@
 from flask import Flask
 from .route import register_route
-from . import cache
+from src import cache
 
 
 def create_app():

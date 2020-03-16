@@ -1,6 +1,5 @@
 import fire
 
-from src import data
 from src.wsgi import app
 
 
@@ -10,10 +9,6 @@ def run_scrapper():
 
 def clear_cache():
     print("clear cache")
-
-
-def run():
-    data.case("confirmed")
 
 
 def run_web():
