@@ -8,11 +8,11 @@ verify_ssl = true
 [packages]
 alembic = "*"
 fire = "*"
-psycopg2-binary = "*"
 cachetools = "*"
 requests = "*"
 flask = "*"
 flask-caching = "*"
+gunicorn = "*"
 
 [requires]
 python_version = "3.7"

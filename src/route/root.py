@@ -27,15 +27,15 @@ TODAY_STR = {
 @cache.cached(timeout=300)
 def index():
     data = {
-        "confirmed": 0,
-        "deaths": 0,
-        "recovered": 0,
+        "Confirmed": 0,
+        "Deaths": 0,
+        "Recovered": 0,
     }
 
     for item in _get_today():
-        data['confirmed'] += int(item['Confirmed'])
-        data['deaths'] += int(item['Deaths'])
-        data['recovered'] += int(item['Recovered'])
+        data['Confirmed'] += int(item['Confirmed'])
+        data['Deaths'] += int(item['Deaths'])
+        data['Recovered'] += int(item['Recovered'])
 
     return jsonify(data), 200
 
