@@ -1,0 +1,6 @@
+{
+  "name": "Coronavirus Disease 19 API Tracker",
+  "description": "🍰 Simple and 🦅 fast covid-19 api global data parser using Flask, data gathered from Novel Coronavirus (COVID-19) Cases, provided by JHU CSSE",
+  "repository": "https://github.com/k1m0ch1/covid-19-api",
+  "keywords": ["covid19", "flask", "python"]
+}
