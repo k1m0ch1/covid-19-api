@@ -1,4 +1,4 @@
-name: Testing Action
+name: Build the api server
 
 on:
   release:

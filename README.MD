@@ -12,8 +12,47 @@
 
 This is just a simple API tracker for covid-19 latest information for recovered, confirmed and deaths cases. The main purpose of this repo is for bot announcement to whatsapp, telegram and discord about latest cases of covid-19.
 
-you can try the api here [https;//covid-19api.heroku.com/](https;//covid-19api.heroku.com/) ![Website](https://img.shields.io/website?down_message=offline&up_message=online&url=https://covid-19api.herokuapp.com)
+you can try the api here [https://covid-19api.heroku.com/](https;//covid-19api.heroku.com/) ![Website](https://img.shields.io/website?down_message=offline&up_message=online&url=https://covid-19api.herokuapp.com)
 or [![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
+
+# Bot Whatsapp
+(WARNING: This is only available with Bahasa Language, need some help for translation)
+This bot is for covid-19 information purpose by automatically answer for available data, by using `!covid <command>`, here is the available command :
+1. status
+This will return information about current global case, example output
+```
+Confirmed: xx
+Deaths: xx
+Recovered: xx
+```
+2. id
+This will return information about current indonesia corona case, example output
+```
+Terkonfirmasi: xx
+Meninggal: xx
+Sembuh: xx
+Dalam Perawatan: xx
+
+Update Terakhir:
+2020-03-17T07:01:01+00:00
+```
+3. id info
+This will return basic information about corona in indonesia
+4. ping
+The bot will response "pong"
+5. halo, hello, help
+The introduction and list of available command
+## Requirement
+Docker
+## Installation
+run this command
+```
+docker run --name gobot-covid docker.pkg.github.com/k1m0ch1/covid-19-api/gobot-covid:latest
+```
+The QR Code will be available in terminal for more less than 10 second, if timeout you need to run the first command again
+after the QR Code is succesfully scanned
+
+I prefer to run the container in the backgroun by stop the container first with `Ctrl+C` and then run the container again with command `docker start gobot-covid`
 
 
 # Endpoint
@@ -26,6 +65,26 @@ GET /
 ```
 {"Confirmed":167447,"Deaths":6440,"Recovered":76034}
 ```
+## Get each countries confirmed, deaths, and recovered cases
+```
+GET /confirmed
+```
+
+```
+[
+    ...,
+    {
+        "confirmed": 14991,
+        "countryRegion": "Iran",
+        "lastUpdate": "2020-03-16T14:38:45",
+        "latitude": "32.4279",
+        "longitude": "53.6880",
+        "provinceState": null
+    }
+    ...,
+]
+```
+same as result with endpoint `GET /deaths` and `GET /recovered`
 ## Get latest information about all country cases status
 ```
 GET /all
@@ -46,6 +105,56 @@ GET /all
     ...
 ]
 ```
+## List of available countries
+```
+GET /countries
+```
+## List of available countries detail cases
+```
+GET /countries/<alpha2-country-code>
+```
+```
+GET /countries/us
+```
+```
+[
+    ...,
+    {
+        "confirmed": 557,
+        "countryRegion": "US",
+        "deaths": 7,
+        "lastUpdate": "2020-03-16T23:53:03",
+        "latitude": "36.1162",
+        "longitude": "-119.6816",
+        "provinceState": "California",
+        "recovered": 6
+    },
+    ...,
+    {
+        "summary": {
+            "confirmed": 4632,
+            "deaths": 85,
+            "recovered": 17
+        }
+    }
+    ...,
+]
+```
+if the country only have a single data, the summary data will not exist
+
+## List of available news
+```
+GET /news
+```
+get the latest top headlines about corona virus,
+the news is get from `NewsAPI.org` see there for available news
+
+## List of available news in specific countries
+```
+GET /news/<alpha2-country-code>
+```
+get the latest top headlines about corona virus in specific countries,
+the news is get from `NewsAPI.org` see there for available news
 
 # Docker
 You can use docker by pull
@@ -54,7 +163,7 @@ docker run --name covid-19-api -p 5001:5001 -d docker.pkg.github.com/k1m0ch1/cov
 ```
 or
 ```
-docker run --name covid-19-api -p 8000:8000 -d docker.pkg.github.com/k1m0ch1/covid-19-api/covid-19-api:latest run_web_prod
+docker run --name covid-19-api -p 5000:5000 -d docker.pkg.github.com/k1m0ch1/covid-19-api/covid-19-api:latest run_web_prod
 ```
 
 # Development
@@ -77,11 +186,11 @@ gunicorn --config python:src.gunicorn_cfg src.wsgi:app
 ```
 
 ## Next to do :
-- ~~deploy to server for public use~~ deployed to [https;//covid-19api.heroku.com/](https;//covid-19api.heroku.com/)
-- add new endpoint for each countries
-- add new endoint `/confirmed` `/deaths` and `/recovered`
+- ~~deploy to server for public use~~ deployed to [https://covid19-api.yggdrasil.id/](https://covid19-api.yggdrasil.id/) Thanks @habibiefaried
+- ~~add new endpoint for each countries~~ referrence from @mathdroid
+- ~~add new endoint `/confirmed` `/deaths` and `/recovered`~~
 - bot discord
-- bot whatsapp
+- ~~bot whatsapp~~
 - bot telegram
 - news crawler from reliable resource
 
