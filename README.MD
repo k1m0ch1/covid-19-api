@@ -1,15 +1,14 @@
 # Coronavirus Disease 19 API Tracker
 
-[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
-![GitHub stars](https://img.shields.io/github/stars/k1m0ch1/covid-19-api)
-![GitHub forks](https://img.shields.io/github/forks/k1m0ch1/covid-19-api)
 ![GitHub last commit](https://img.shields.io/github/last-commit/k1m0ch1/covid-19-api)
+![GitHub stars](https://img.shields.io/github/stars/k1m0ch1/covid-19-api)
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/k1m0ch1/covid-19-api)
+![GitHub forks](https://img.shields.io/github/forks/k1m0ch1/covid-19-api)
 ![GitHub issues](https://img.shields.io/github/issues/k1m0ch1/covid-19-api)
 
 This is just a simple API tracker for covid-19 latest information for recovered, confirmed and deaths cases. The main purpose of this repo is for bot announcement to whatsapp, telegram and discord about latest cases of covid-19.
 
-you can try the api here [https;//covid-19api.heroku.com/](https;//covid-19api.heroku.com/)
+you can try the api here [https;//covid-19api.heroku.com/](https;//covid-19api.heroku.com/) or [![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
 
 
 # Endpoint
