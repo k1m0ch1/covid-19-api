@@ -22,10 +22,10 @@ jobs:
       id: vars
       run: echo ::set-output name=tag::$(echo ${GITHUB_REF:10}
     - name: Build the tagged Docker image
-      run: docker build --tag docker.pkg.github.com/k1m0ch1/covid-19-api/covid-19-api:${{steps.vars.outputs.tag}}
+      run: docker build --tag docker.pkg.github.com/k1m0ch1/covid-19-api/covid-19-api:${{steps.vars.outputs.tag}} .
     - name: Push the tagged Docker image
       run: docker push docker.pkg.github.com/k1m0ch1/covid-19-api/covid-19-api:${{steps.vars.outputs.tag}}
     - name: Build the latest Docker image
-      run: docker build --tag docker.pkg.github.com/k1m0ch1/covid-19-api/covid-19-api:latest
+      run: docker build --tag docker.pkg.github.com/k1m0ch1/covid-19-api/covid-19-api:latest .
     - name: Push the latest Docker image
       run: docker push docker.pkg.github.com/k1m0ch1/covid-19-api/covid-19-api:latest
