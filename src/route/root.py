@@ -136,11 +136,6 @@ def _get_today(**kwargs):
         countries = None
         key_country = ""
         result = []
-        summary = {
-            "confirmed": 0,
-            "deaths": 0,
-            "recovered": 0,
-        }
         with open('src/countries.json', 'rb') as outfile:
             countries = json.load(outfile)
 
@@ -158,12 +153,6 @@ def _get_today(**kwargs):
                     result[-1][curr_key] = \
                         int(item[key]) if key in DEFAULT_KEYS else \
                         None if item[key] == "" else item[key]
-        if len(result) > 1:
-            for item in result:
-                summary['confirmed'] += int(item['confirmed'])
-                summary['deaths'] += int(item['deaths'])
-                summary['recovered'] += int(item['recovered'])
-            result.append({"summary": summary})
 
     return result
 
