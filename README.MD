@@ -12,7 +12,7 @@
 
 This is just a simple API tracker for covid-19 latest information for recovered, confirmed and deaths cases. The main purpose of this repo is for bot announcement to whatsapp, telegram and discord about latest cases of covid-19.
 
-you can try the api here [https://covid-19api.heroku.com/](https;//covid-19api.heroku.com/) ![Website](https://img.shields.io/website?down_message=offline&up_message=online&url=https://covid-19api.herokuapp.com)
+you can try the api here [https://covid19-api.yggdrasil.id/](https://covid19-api.yggdrasil.id/) ![Website](https://img.shields.io/website?down_message=offline&up_message=online&url=https://covid19-api.yggdrasil.id/) thanks for @habibiefaried for helping the server
 or [![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
 
 # Bot Whatsapp
