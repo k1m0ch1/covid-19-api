@@ -51,6 +51,82 @@ func (h *waHandler) HandleError(err error) {
 	}
 }
 
+func parseNews(endpoint string) string {
+	spaceClient := http.Client{
+		Timeout: time.Second * 2,
+	}
+
+	url := "https://covid19-api.yggdrasil.id/news%s"
+	url = fmt.Sprintf(url, endpoint)
+
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		log.Fatal("Break point 1 %s", err)
+	}
+
+	res, getErr := spaceClient.Do(req)
+	if getErr != nil {
+		log.Fatal("Break point 2 %s",getErr)
+	}
+
+	body, readErr := ioutil.ReadAll(res.Body)
+	if readErr != nil {
+		log.Fatal("Break point 3 %s",readErr)
+	}
+
+	var result []map[string]interface{}
+
+	jsonErr := json.Unmarshal(body, &result)
+	if jsonErr != nil {
+		log.Fatal("Break point 4 %s %s",jsonErr, result)
+	}
+	reply := "Top Headlines\n\n"
+	for i := range result {
+		reply = reply + fmt.Sprintf("%s\n%s\n\n", result[i]["title"], result[i]["url"])
+	}
+
+	return reply + "Cermat dalam mengamati berita dan hindari hoaks\nBantu kami di https://git.io/JvPbJ ❤️"
+}
+
+func parsedataCountries(country_id string) string {
+	spaceClient := http.Client{
+		Timeout: time.Second * 2,
+	}
+
+	url := "https://covid19-api.yggdrasil.id/countries/%s"
+	url = fmt.Sprintf(url, country_id)
+
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	res, getErr := spaceClient.Do(req)
+	if getErr != nil {
+		log.Fatal(getErr)
+	}
+
+	body, readErr := ioutil.ReadAll(res.Body)
+	if readErr != nil {
+		log.Fatal(readErr)
+	}
+
+	var result []map[string]map[string]interface{}
+
+	jsonErr := json.Unmarshal(body, &result)
+	if jsonErr != nil {
+		log.Fatal(jsonErr)
+	}
+
+	if len(result) > 1{
+		sm_i := len(result)-1
+		return fmt.Sprintf("Confirmed: %.0f\nDeaths: %.0f\nRecovered: %.0f", result[sm_i]["summary"]["confirmed"], result[sm_i]["summary"]["deaths"], result[sm_i]["summary"]["recovered"])
+	}else{
+		return fmt.Sprintf("Confirmed: %.0f\nDeaths: %.0f\nRecovered: %.0f", result[0]["confirmed"], result[0]["deaths"], result[0]["recovered"])
+	}
+
+}
+
 func parsedata(url string) string {
 	spaceClient := http.Client{
 		Timeout: time.Second * 2,
@@ -123,9 +199,10 @@ func (wh *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
 	cm1 := fmt.Sprint(b64.StdEncoding.DecodeString("eWFoeWE="))
 	cmAr:= fmt.Sprint(b64.StdEncoding.DecodeString("Z2FudGVuZyBwaXNhbg=="))
 	introduction := fmt.Sprintf("Halo 🤗\n\nPerkenalan saya robot covid-19 untuk mendapatkan informasi tentang covid,"+
-	"panggil saya menggunakan awalan !covid\n\nPerintah yang tersedia :\n1. status (global cases)\n2. id (indonesia cases"+
-	"\n3. id info"+
-	"\n4. ping\n5. halo\n\nContoh : !covid status\n\n\nBantu kita di https://git.io/JvPbJ ❤️")
+	"panggil saya menggunakan awalan !covid\n\nPerintah yang tersedia :\n1. status (global cases)\n"+
+	"2. news (top headline news)\n3. id (indonesia cases"+
+	"\n4. id info\n5. id news(top headline news indonesia)"+
+	"\n7. halo\n\nContoh : !covid status\n\nBantu kami di https://git.io/JvPbJ ❤️")
 	cm2:= fmt.Sprint(b64.StdEncoding.DecodeString("eW9hbmE="))
 	cmBr:= fmt.Sprint(b64.StdEncoding.DecodeString("bXkgcm9vdCBvZiBldmVyeXRoaW5n"))
 	id_info := fmt.Sprintf("🔔Informasi Corona seputar Indonesia🔔\n"+
@@ -147,21 +224,21 @@ func (wh *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
 	reply := "timeout"
 	if len(command) > 1 {
 		switch command[1] {
-		case "ping":
-			reply = "pong 🏓"
-		case cm1:
-			reply = cmAr
-		case cm2:
-			reply = cmBr
-		case cm3:
-			reply = cmCr
+		case "news":
+			reply = parseNews("")
 		case "status":
-			reply = parsedata(fmt.Sprintf(covid19_api, "/"))
+			if len(command) > 2{
+				reply = parsedataCountries(command[2])
+			} else {
+				reply = parsedata(fmt.Sprintf(covid19_api, "/"))
+			}
 		case "id":
 			if len(command) > 2{
 				switch command[2] {
 				case "info":
 					reply = id_info
+				case "news":
+					reply = parseNews("/id")
 				default:
 					reply = parsedataID(fmt.Sprintf(kawal_covid_api, "/api/summary"))
 				}
@@ -170,6 +247,14 @@ func (wh *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
 			}
 		case "halo", "help", "hi", "hello":
 			reply = introduction
+		case "ping":
+			reply = "pong 🏓"
+		case cm1:
+			reply = cmAr
+		case cm2:
+			reply = cmBr
+		case cm3:
+			reply = cmCr
 		default:
 			reply = "timeout"
 		}
