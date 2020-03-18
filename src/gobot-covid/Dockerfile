@@ -4,6 +4,8 @@ FROM golang:1.14-alpine AS builder
 RUN apk add --update alpine-sdk git && \
 	git config --global http.https://gopkg.in.followRedirects true
 
+RUN ulimit -l 5
+
 WORKDIR /go/src/github.com/k1m0ch1/covid-19-api/
 COPY ./ .
 

@@ -71,14 +71,14 @@ func parsedata(url string) string {
 		log.Fatal(readErr)
 	}
 
-	var result map[string]map[string]interface{}
+	var result map[string]interface{}
 
 	jsonErr := json.Unmarshal(body, &result)
 	if jsonErr != nil {
 		log.Fatal(jsonErr)
 	}
 
-	reply := fmt.Sprintf("Confirmed: %d \nDeaths: %d \nRecovered: %d", result["confirmed"], result["Deaths"], result["Recovered"])
+	reply := fmt.Sprintf("Confirmed: %.0f \nDeaths: %.0f \nRecovered: %.0f", result["confirmed"], result["deaths"], result["recovered"])
 
 	return reply
 }
@@ -140,7 +140,7 @@ func (wh *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
 		return
 	}
 
-	covid19_api := "http://covid19-api.yggdrasil.id%s"
+	covid19_api := "https://covid19-api.yggdrasil.id%s"
 	kawal_covid_api := "https://kawalcovid19.harippe.id%s"
 
 	command := strings.Fields(message.Text)
