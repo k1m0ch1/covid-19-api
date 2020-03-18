@@ -73,7 +73,6 @@ func parsedata(url string) string {
 
 	var result map[string]map[string]interface{}
 
-	summary_d := summary{}
 	jsonErr := json.Unmarshal(body, &result)
 	if jsonErr != nil {
 		log.Fatal(jsonErr)
@@ -120,7 +119,6 @@ func parsedataID(url string) string {
 
 //Optional to be implemented. Implement HandleXXXMessage for the types you need.
 func (wh *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
-	config = setConfig()
 	// fmt.Printf("%v %v %v \n\t%v\n", message.Info.Timestamp, message.Info.Id, message.Info.RemoteJid, message.Text)
 	cm1 := fmt.Sprint(b64.StdEncoding.DecodeString("eWFoeWE="))
 	cmAr:= fmt.Sprint(b64.StdEncoding.DecodeString("Z2FudGVuZyBwaXNhbg=="))
@@ -142,6 +140,9 @@ func (wh *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
 		return
 	}
 
+	covid19_api := "http://covid19-api.yggdrasil.id%s"
+	kawal_covid_api := "https://kawalcovid19.harippe.id%s"
+
 	command := strings.Fields(message.Text)
 	reply := "timeout"
 	if len(command) > 1 {
@@ -155,17 +156,17 @@ func (wh *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
 		case cm3:
 			reply = cmCr
 		case "status":
-			reply = parsedata(config.covid19_api)
+			reply = parsedata(fmt.Sprintf(covid19_api, "/"))
 		case "id":
 			if len(command) > 2{
 				switch command[2] {
 				case "info":
 					reply = id_info
 				default:
-					reply = parsedataID(config.kawal_covid_api)
+					reply = parsedataID(fmt.Sprintf(kawal_covid_api, "/api/summary"))
 				}
 			} else {
-				reply = parsedataID(config.kawal_covid_api)
+				reply = parsedataID(fmt.Sprintf(kawal_covid_api, "/api/summary"))
 			}
 		case "halo", "help", "hi", "hello":
 			reply = introduction
@@ -304,11 +305,4 @@ func getEnv(key, fallback string) string {
         value = fallback
     }
     return value
-}
-
-func setConfig(){
-	config := config{}
-	config.covid19_api = getEnv("GOBOT_COVID_API", "http://covid19-api.yggdrasil.id/")
-	config.kawal_covid_api = getEnv("GOBOT_KAWAL_COVID_API", "https://kawalcovid19.harippe.id")
-	return config
 }

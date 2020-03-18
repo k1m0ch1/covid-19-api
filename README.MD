@@ -47,7 +47,7 @@ Docker
 ## Installation
 run this command
 ```
-docker run --name gobot-covid docker.pkg.github.com/k1m0ch1/covid-19-api/gobot-covid:latest
+docker run --restart on-failure --name gobot-covid k1m0ch1/gobot-covid
 ```
 The QR Code will be available in terminal for more less than 10 second, if timeout you need to run the first command again
 after the QR Code is succesfully scanned
