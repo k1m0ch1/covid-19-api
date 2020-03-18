@@ -111,19 +111,24 @@ func parsedataCountries(country_id string) string {
 		log.Fatal(readErr)
 	}
 
-	var result []map[string]map[string]interface{}
+	var result []map[string]interface{}
 
 	jsonErr := json.Unmarshal(body, &result)
 	if jsonErr != nil {
 		log.Fatal(jsonErr)
 	}
 
-	if len(result) > 1{
-		sm_i := len(result)-1
-		return fmt.Sprintf("Confirmed: %.0f\nDeaths: %.0f\nRecovered: %.0f", result[sm_i]["summary"]["confirmed"], result[sm_i]["summary"]["deaths"], result[sm_i]["summary"]["recovered"])
-	}else{
-		return fmt.Sprintf("Confirmed: %.0f\nDeaths: %.0f\nRecovered: %.0f", result[0]["confirmed"], result[0]["deaths"], result[0]["recovered"])
+	c := 0.0
+	d := 0.0
+	r := 0.0
+
+	for i := range result {
+		c += result[i]["confirmed"].(float64)
+		d += result[i]["deaths"].(float64)
+		r += result[i]["recovered"].(float64)
 	}
+
+	return fmt.Sprintf("%s\n\nConfirmed: %.0f\nDeaths: %.0f\nRecovered: %.0f", countries(strings.ToUpper(country_id)), c, d, r)
 
 }
 
@@ -154,7 +159,7 @@ func parsedata(url string) string {
 		log.Fatal(jsonErr)
 	}
 
-	reply := fmt.Sprintf("Confirmed: %.0f \nDeaths: %.0f \nRecovered: %.0f", result["confirmed"], result["deaths"], result["recovered"])
+	reply := fmt.Sprintf("Global Cases\n\nConfirmed: %.0f \nDeaths: %.0f \nRecovered: %.0f", result["confirmed"], result["deaths"], result["recovered"])
 
 	return reply
 }
@@ -186,9 +191,14 @@ func parsedataID(url string) string {
 		log.Fatal(jsonErr)
 	}
 
+	t1, e := time.Parse(
+        time.RFC3339,
+		fmt.Sprintf("%s", result["metadata"]["lastUpdatedAt"]))
+	e=e
+
 	reply := fmt.Sprintf("Terkonfirmasi: %.0f \nMeninggal: %.0f \nSembuh: %.0f \nDalam Perawatan: %.0f\n\nUpdate terakhir %s",
 		result["confirmed"]["value"], result["deaths"]["value"],
-		result["recovered"]["value"], result["activeCare"]["value"], result["metadata"]["lastUpdatedAt"])
+		result["recovered"]["value"], result["activeCare"]["value"], t1.Format("02 Jan 06 15:04"))
 
 	return reply
 }
@@ -384,10 +394,39 @@ func writeSession(session whatsapp.Session) error {
 	return nil
 }
 
-func getEnv(key, fallback string) string {
-    value, exists := os.LookupEnv(key)
-    if !exists {
-        value = fallback
-    }
-    return value
+func countries(code string) string{
+	url := "https://covid19-api.yggdrasil.id/countries"
+	spaceClient := http.Client{
+		Timeout: time.Second * 2,
+	}
+
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	res, getErr := spaceClient.Do(req)
+	if getErr != nil {
+		log.Fatal(getErr)
+	}
+
+	body, readErr := ioutil.ReadAll(res.Body)
+	if readErr != nil {
+		log.Fatal(readErr)
+	}
+
+	var result map[string]map[string]interface{}
+
+	jsonErr := json.Unmarshal([]byte(body), &result)
+	if jsonErr != nil {
+		log.Fatal(jsonErr)
+	}
+
+	for key, val := range result["countries"] {
+		if val == code {
+			return key
+		}
+	}
+
+	return "Not Found"
 }
