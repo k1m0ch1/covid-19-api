@@ -1,6 +1,5 @@
 from flask import Blueprint, jsonify, request
 from src.cache import cache
-from os import environ
 import time
 from sqlalchemy import or_
 
@@ -12,6 +11,7 @@ maskmap = Blueprint('maskmap', __name__)
 
 
 @maskmap.route('/places', methods=['POST'])
+@cache.cached(timeout=50)
 def queryPlaces():
     body = request.get_json()
     places = session.query(Place) \
@@ -20,20 +20,31 @@ def queryPlaces():
                     Place.lat == body.get("lat"))
                 ) \
         .all()
+
+    if len(places) == 0:
+        return jsonify(message="Not Found"), 404
+
     if places is not None:
         return jsonify([_placeDict(place) for place in places]), 200
+
     return jsonify(message="Not Found"), 404
 
 
 @maskmap.route('/places')
+@cache.cached(timeout=50)
 def getAllPlaces():
     places = session.query(Place).all()
+
+    if len(places) == 0:
+        return jsonify(message="Not Found"), 404
+
     if places is not None:
         return jsonify([_placeDict(places) for place in places]), 200
     return jsonify(message="Not Found"), 404
 
 
 @maskmap.route('/stories')
+@cache.cached(timeout=50)
 def getAllStories():
     stories = session.query(Story).all()
     if stories is not None:
