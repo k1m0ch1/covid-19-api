@@ -3,8 +3,8 @@ RUN apk add \
 	--repository http://dl-cdn.alpinelinux.org/alpine/edge/testing \
 	--no-cache \
 	build-base libffi-dev python3-dev py3-lxml \
-    libxml2 libxml2-dev libxslt-dev
-
+    libxml2 libxml2-dev libxslt-dev postgresql-dev openssh git \
+	libxml2-dev libxslt-dev
 
 RUN pip install --upgrade pip && pip install pipenv gunicorn
 
