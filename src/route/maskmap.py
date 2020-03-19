@@ -47,6 +47,10 @@ def getAllPlaces():
 @cache.cached(timeout=50)
 def getAllStories():
     stories = session.query(Story).all()
+
+    if len(stories) == 0:
+        return jsonify(message="Not Found"), 404
+
     if stories is not None:
         return jsonify([{
             "place_id": story.place_id,
