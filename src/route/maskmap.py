@@ -27,8 +27,6 @@ def queryPlaces():
     if places is not None:
         return jsonify([_placeDict(place) for place in places]), 200
 
-    return jsonify(message="Not Found"), 404
-
 
 @maskmap.route('/places')
 @cache.cached(timeout=50)
@@ -39,8 +37,7 @@ def getAllPlaces():
         return jsonify(message="Not Found"), 404
 
     if places is not None:
-        return jsonify([_placeDict(places) for place in places]), 200
-    return jsonify(message="Not Found"), 404
+        return jsonify([_placeDict(place) for place in places]), 200
 
 
 @maskmap.route('/stories')
@@ -52,31 +49,14 @@ def getAllStories():
         return jsonify(message="Not Found"), 404
 
     if stories is not None:
-        return jsonify([{
-            "place_id": story.place_id,
-            "user_id": story.user_id,
-            "availability": story.availability,
-            "num": story.num,
-            "price": story.price,
-            "validity": story.validity,
-            "created": time.mktime(story.created.timetuple())
-        } for story in stories]), 200
-    return jsonify(message="Not Found"), 404
+        return jsonify([_storyDict(story) for story in stories]), 200
 
 
 @maskmap.route('/story/<story_id>')
 def getStory(story_id):
     story = session.query(Story).get(story_id)
     if story is not None:
-        return jsonify({
-            "place_id": story.place_id,
-            "user_id": story.user_id,
-            "availability": story.availability,
-            "num": story.num,
-            "price": story.price,
-            "validity": story.validity,
-            "created": time.mktime(story.created.timetuple())
-        }), 200
+        return jsonify(_storyDict(story)), 200
     return jsonify(message="Not Found"), 404
 
 
@@ -93,6 +73,7 @@ def getUser(user_id):
     user = session.query(User).get(user_id)
     if user is not None:
         return jsonify({
+            "id": user.id,
             "name": user.name,
             "email": user.email,
             "birthdate": time.mktime(user.birthdate.timetuple()),
@@ -154,19 +135,26 @@ def handleStoriesCreated():
 
 def _placeDict(place):
     return {
+        "id": place.id,
         "name": place.name,
         "lat": place.lat,
         "long": place.lng,
         "description": place.description,
         "created": time.mktime(place.created.timetuple()),
         "story": [
-            {
-                "user_id": row.user_id,
-                "availability": row.availability,
-                "num": row.num,
-                "price": row.price,
-                "validity": row.validity,
-                "created": time.mktime(row.created.timetuple()),
-            } for row in place.story
+            _storyDict(row) for row in place.story
         ]
+    }
+
+
+def _storyDict(story):
+    return {
+        "id": story.id,
+        "place_id": story.place_id,
+        "user_id": story.user_id,
+        "availability": story.availability,
+        "num": story.num,
+        "price": story.price,
+        "validity": story.validity,
+        "created": time.mktime(story.created.timetuple())
     }
