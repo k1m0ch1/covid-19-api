@@ -5,3 +5,6 @@
 *.pyc
 
 /.vscode
+/src/gobot-covid/session/*
+/src/gobot-covid/session
+

@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"io/ioutil"
+	"math/rand"
 
 	b64 "encoding/base64"
 	qrcodeTerminal "github.com/Baozisoftware/qrcode-terminal-go"
@@ -20,59 +21,17 @@ import (
 
 var wah *whatsapp.Conn
 
-var api_summary = "https://covid-19api.herokuapp.com/"
-var api_indonesia = "https://kawalcovid19.harippe.id/api/summary"
-
 type waHandler struct {
 	c *whatsapp.Conn
 	startTime uint64
 }
 
-type config struct {
-	covid19_api		string
-	kawal_covid_api	string
-
-}
-
-//HandleError needs to be implemented to be a valid WhatsApp handler
-func (h *waHandler) HandleError(err error) {
-
-	if e, ok := err.(*whatsapp.ErrConnectionFailed); ok {
-		log.Printf("Connection failed, underlying error: %v", e.Err)
-		log.Println("Waiting 30sec...")
-		<-time.After(30 * time.Second)
-		log.Println("Reconnecting...")
-		err := h.c.Restore()
-		if err != nil {
-			log.Fatalf("Restore failed: %v", err)
-		}
-	} else {
-		log.Printf("error occoured: %v\n", err)
-	}
-}
-
 func parseNews(endpoint string) string {
-	spaceClient := http.Client{
-		Timeout: time.Second * 2,
-	}
 
 	url := "https://covid19-api.yggdrasil.id/news%s"
 	url = fmt.Sprintf(url, endpoint)
 
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		log.Fatal("Break point 1 %s", err)
-	}
-
-	res, getErr := spaceClient.Do(req)
-	if getErr != nil {
-		log.Fatal("Break point 2 %s",getErr)
-	}
-
-	body, readErr := ioutil.ReadAll(res.Body)
-	if readErr != nil {
-		log.Fatal("Break point 3 %s",readErr)
-	}
+	body := reqUrl(url)
 
 	var result []map[string]interface{}
 
@@ -89,27 +48,10 @@ func parseNews(endpoint string) string {
 }
 
 func parsedataCountries(country_id string) string {
-	spaceClient := http.Client{
-		Timeout: time.Second * 2,
-	}
-
 	url := "https://covid19-api.yggdrasil.id/countries/%s"
 	url = fmt.Sprintf(url, country_id)
 
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	res, getErr := spaceClient.Do(req)
-	if getErr != nil {
-		log.Fatal(getErr)
-	}
-
-	body, readErr := ioutil.ReadAll(res.Body)
-	if readErr != nil {
-		log.Fatal(readErr)
-	}
+	body := reqUrl(url)
 
 	var result []map[string]interface{}
 
@@ -133,24 +75,7 @@ func parsedataCountries(country_id string) string {
 }
 
 func parsedata(url string) string {
-	spaceClient := http.Client{
-		Timeout: time.Second * 2,
-	}
-
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	res, getErr := spaceClient.Do(req)
-	if getErr != nil {
-		log.Fatal(getErr)
-	}
-
-	body, readErr := ioutil.ReadAll(res.Body)
-	if readErr != nil {
-		log.Fatal(readErr)
-	}
+	body := reqUrl(url)
 
 	var result map[string]interface{}
 
@@ -165,24 +90,7 @@ func parsedata(url string) string {
 }
 
 func parsedataID(url string) string {
-	spaceClient := http.Client{
-		Timeout: time.Second * 2,
-	}
-
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	res, getErr := spaceClient.Do(req)
-	if getErr != nil {
-		log.Fatal(getErr)
-	}
-
-	body, readErr := ioutil.ReadAll(res.Body)
-	if readErr != nil {
-		log.Fatal(readErr)
-	}
+	body := reqUrl(url)
 
 	var result map[string]map[string]interface{}
 
@@ -191,6 +99,11 @@ func parsedataID(url string) string {
 		log.Fatal(jsonErr)
 	}
 
+	loc, err := time.LoadLocation("Asia/Jakarta")
+    if err != nil {
+        panic(err)
+    }
+
 	t1, e := time.Parse(
         time.RFC3339,
 		fmt.Sprintf("%s", result["metadata"]["lastUpdatedAt"]))
@@ -198,7 +111,7 @@ func parsedataID(url string) string {
 
 	reply := fmt.Sprintf("Terkonfirmasi: %.0f \nMeninggal: %.0f \nSembuh: %.0f \nDalam Perawatan: %.0f\n\nUpdate terakhir %s",
 		result["confirmed"]["value"], result["deaths"]["value"],
-		result["recovered"]["value"], result["activeCare"]["value"], t1.Format("02 Jan 06 15:04"))
+		result["recovered"]["value"], result["activeCare"]["value"], t1.In(loc).Format("02 Jan 06 15:04"))
 
 	return reply
 }
@@ -271,9 +184,29 @@ func (wh *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
 	}
 
 	if len(command) > 1 && reply != "timeout" {
-		<-time.After(3 * time.Second)
+		<-time.After(time.Duration(rand.Intn(7 - 3) + 3) * time.Second)
 		go sendMessage(reply, message.Info.RemoteJid)
 	}
+}
+
+func countries(code string) string{
+	url := "https://covid19-api.yggdrasil.id/countries"
+	body := reqUrl(url)
+
+	var result map[string]map[string]interface{}
+
+	jsonErr := json.Unmarshal([]byte(body), &result)
+	if jsonErr != nil {
+		log.Fatal(jsonErr)
+	}
+
+	for key, val := range result["countries"] {
+		if val == code {
+			return key
+		}
+	}
+
+	return "Not Found"
 }
 
 func main() {
@@ -317,8 +250,6 @@ func main() {
 }
 
 func sendMessage(message string, RJID string) {
-	log.Printf("Trying to send message")
-
 	msg := whatsapp.TextMessage{
 		Info: whatsapp.MessageInfo{
 			RemoteJid: RJID,
@@ -344,6 +275,7 @@ func login(wac *whatsapp.Conn) error {
 		if err != nil {
 			return fmt.Errorf("restoring failed: %v\n", err)
 		}
+		log.Println(session.Wid)
 	} else {
 		//no saved session -> regular login
 		qr := make(chan string)
@@ -367,7 +299,8 @@ func login(wac *whatsapp.Conn) error {
 
 func readSession() (whatsapp.Session, error) {
 	session := whatsapp.Session{}
-	file, err := os.Open(os.TempDir() + "/whatsappSession.gob")
+	log.Println("Trying to get the session " + getSessionName())
+	file, err := os.Open(getSessionName())
 	if err != nil {
 		return session, err
 	}
@@ -381,7 +314,7 @@ func readSession() (whatsapp.Session, error) {
 }
 
 func writeSession(session whatsapp.Session) error {
-	file, err := os.Create(os.TempDir() + "/whatsappSession.gob")
+	file, err := os.Create(getSessionName())
 	if err != nil {
 		return err
 	}
@@ -394,39 +327,60 @@ func writeSession(session whatsapp.Session) error {
 	return nil
 }
 
-func countries(code string) string{
-	url := "https://covid19-api.yggdrasil.id/countries"
+func getSessionName() string{
+	mydir, err := os.Getwd()
+	if err != nil {
+		fmt.Println(err)
+	}
+	if _, err := os.Stat(mydir + "/session"); os.IsNotExist(err) {
+		os.MkdirAll(mydir + "/session", os.ModePerm)
+	}
+	sessionName := ""
+	if len(os.Args) == 1 {
+		sessionName =  mydir + "/session" + "/whatsappSession.gob"
+	}else{
+		sessionName = mydir + "/session/" + os.Args[1] + ".gob"
+	}
+
+	return sessionName
+}
+
+//HandleError needs to be implemented to be a valid WhatsApp handler
+func (h *waHandler) HandleError(err error) {
+
+	if e, ok := err.(*whatsapp.ErrConnectionFailed); ok {
+		log.Printf("Connection failed, underlying error: %v", e.Err)
+		log.Println("Waiting 30sec...")
+		<-time.After(30 * time.Second)
+		log.Println("Reconnecting...")
+		err := h.c.Restore()
+		if err != nil {
+			log.Fatalf("Restore failed: %v", err)
+		}
+	} else {
+		log.Printf("error occoured: %v\n", err)
+	}
+}
+
+func reqUrl(url string) []byte{
 	spaceClient := http.Client{
 		Timeout: time.Second * 2,
 	}
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Break point 1 %s", err)
 	}
 
 	res, getErr := spaceClient.Do(req)
 	if getErr != nil {
-		log.Fatal(getErr)
+		log.Fatal("Break point 2 %s",getErr)
 	}
 
 	body, readErr := ioutil.ReadAll(res.Body)
 	if readErr != nil {
-		log.Fatal(readErr)
+		log.Fatal("Break point 3 %s",readErr)
 	}
 
-	var result map[string]map[string]interface{}
-
-	jsonErr := json.Unmarshal([]byte(body), &result)
-	if jsonErr != nil {
-		log.Fatal(jsonErr)
-	}
-
-	for key, val := range result["countries"] {
-		if val == code {
-			return key
-		}
-	}
-
-	return "Not Found"
+	return body
 }
