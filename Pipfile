@@ -13,6 +13,11 @@ requests = "*"
 flask = "*"
 flask-caching = "*"
 gunicorn = "*"
+flask-login = "*"
+sqlalchemy-utils = "*"
+shortuuid = "*"
+psycopg2-binary = "*"
+sqlalchemy = "*"
 
 [requires]
 python_version = "3.7"
