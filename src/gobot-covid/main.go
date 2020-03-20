@@ -99,11 +99,6 @@ func parsedataID(url string) string {
 		log.Fatal(jsonErr)
 	}
 
-	loc, err := time.LoadLocation("Asia/Jakarta")
-    if err != nil {
-        panic(err)
-    }
-
 	t1, e := time.Parse(
         time.RFC3339,
 		fmt.Sprintf("%s", result["metadata"]["lastUpdatedAt"]))
@@ -111,7 +106,7 @@ func parsedataID(url string) string {
 
 	reply := fmt.Sprintf("Terkonfirmasi: %.0f \nMeninggal: %.0f \nSembuh: %.0f \nDalam Perawatan: %.0f\n\nUpdate terakhir %s",
 		result["confirmed"]["value"], result["deaths"]["value"],
-		result["recovered"]["value"], result["activeCare"]["value"], t1.In(loc).Format("02 Jan 06 15:04"))
+		result["recovered"]["value"], result["activeCare"]["value"], t1.Add(7*time.Hour).Format("02 Jan 06 15:04"))
 
 	return reply
 }
