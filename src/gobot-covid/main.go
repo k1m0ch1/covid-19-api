@@ -101,12 +101,15 @@ func parsedataID(url string) string {
 
 	t1, e := time.Parse(
         time.RFC3339,
-		fmt.Sprintf("%s", result["metadata"]["lastUpdatedAt"]))
+		fmt.Sprintf("%s+00:00", result["metadata"]["last_updated"]))
 	e=e
 
-	reply := fmt.Sprintf("Terkonfirmasi: %.0f \nMeninggal: %.0f \nSembuh: %.0f \nDalam Perawatan: %.0f\n\nUpdate terakhir %s",
-		result["confirmed"]["value"], result["deaths"]["value"],
-		result["recovered"]["value"], result["activeCare"]["value"], t1.Add(7*time.Hour).Format("02 Jan 06 15:04"))
+	reply := fmt.Sprintf("Indonesia\n\nTerkonfirmasi: %.0f *+%.0f*\nMeninggal: %.0f *+%.0f*\nSembuh: %.0f *+%.0f*\nDalam Perawatan: %.0f *+%.0f*\n\nUpdate terakhir %s",
+		result["confirmed"]["value"], result["confirmed"]["diff"],
+		result["deaths"]["value"], result["deaths"]["diff"],
+		result["recovered"]["value"], result["recovered"]["diff"],
+		result["active_care"]["value"], result["active_care"]["diff"],
+		t1.Add(7*time.Hour).Format("02 Jan 06 15:04"))
 
 	return reply
 }
@@ -136,7 +139,6 @@ func (wh *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
 	}
 
 	covid19_api := "https://covid19-api.yggdrasil.id%s"
-	kawal_covid_api := "https://kawalcovid19.harippe.id%s"
 
 	command := strings.Fields(message.Text)
 	reply := "timeout"
@@ -158,10 +160,10 @@ func (wh *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
 				case "news":
 					reply = parseNews("/id")
 				default:
-					reply = parsedataID(fmt.Sprintf(kawal_covid_api, "/api/summary"))
+					reply = parsedataID(fmt.Sprintf(covid19_api, "/id"))
 				}
 			} else {
-				reply = parsedataID(fmt.Sprintf(kawal_covid_api, "/api/summary"))
+				reply = parsedataID(fmt.Sprintf(covid19_api, "/id"))
 			}
 		case "halo", "help", "hi", "hello":
 			reply = introduction
@@ -359,7 +361,7 @@ func (h *waHandler) HandleError(err error) {
 
 func reqUrl(url string) []byte{
 	spaceClient := http.Client{
-		Timeout: time.Second * 2,
+		Timeout: time.Second * 4,
 	}
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
