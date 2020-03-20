@@ -67,3 +67,17 @@ class Story(Base):
     validity = Column(String(50), nullable=True)
     created = ServerTimestamp(False)
     updated = ServerTimestamp(True)
+
+
+class Status(Base):
+    __tablename__ = 'status'
+
+    id = Column(Integer(), primary_key=True)
+    confirmed = Column(Integer(), nullable=False)
+    recovered = Column(Integer(), nullable=False)
+    active_care = Column(Integer(), nullable=False)
+    deaths = Column(Integer(), nullable=False)
+    country_id = Column(String(3), nullable=False)
+    created = ServerTimestamp(False)
+    updated = ServerTimestamp(True)
+

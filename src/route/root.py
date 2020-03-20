@@ -8,6 +8,9 @@ import requests
 import re
 
 from datetime import datetime, timedelta
+from dateutil import parser
+from src.db import session
+from src.models import Status
 
 root = Blueprint('root', __name__)
 
@@ -66,6 +69,52 @@ def countries():
     with open('src/countries.json', 'rb') as outfile:
         return jsonify(json.load(outfile)), 200
     return jsonify({"message": "Error Occured"}), 500
+
+
+@root.route('/id')
+def id():
+    req = requests.get("https://kawalcovid19.harippe.id/api/summary")
+    data = req.json()
+    updated = parser.parse(data['metadata']['lastUpdatedAt']) \
+        .replace(tzinfo=None)
+    alldata = session.query(Status).order_by(Status.id.desc()).all()
+    dbDate = ""
+    if len(alldata) > 0:
+        getData = [_id_beauty(data, row) for row in alldata]
+        dbDate = parser.parse(getData[0]["metadata"]["last_updated"]) \
+            .replace(tzinfo=None)
+        print(updated)
+        print(dbDate)
+        if not updated == dbDate:
+            new_status = Status(
+                confirmed=data['confirmed']['value'],
+                deaths=data['deaths']['value'],
+                recovered=data['recovered']['value'],
+                active_care=data['activeCare']['value'],
+                country_id="id",
+                created=updated,
+                updated=updated
+            )
+            session.add(new_status)
+        for row in getData:
+            if not row['confirmed']['diff'] == 0 and \
+               not row['deaths']['diff'] == 0 and \
+               not row['recovered']['diff'] == 0 and \
+               not row['active_care']['diff'] == 0:
+                return jsonify(row), 200
+        return jsonify(getData[0]), 200
+    else:
+        new_status = Status(
+            confirmed=data['confirmed']['value'],
+            deaths=data['deaths']['value'],
+            recovered=data['recovered']['value'],
+            active_care=data['activeCare']['value'],
+            country_id="id",
+            created=updated,
+            updated=updated
+        )
+        session.add(new_status)
+        return jsonify(_id_beauty(data, 0)), 200
 
 
 @root.route('/countries/<country_id>')
@@ -164,3 +213,43 @@ def _extract_handler(url):
         return False
 
     return [item for item in csv.DictReader(request.text.splitlines())]
+
+
+def _id_beauty(source, db):
+
+    if db == 0:
+        confirmed = 0
+        deaths = 0
+        recovered = 0
+        active_care = 0
+        updated = parser.parse(source['metadata']['lastUpdatedAt']) \
+            .replace(tzinfo=None)
+    else:
+        confirmed = db.confirmed
+        deaths = db.deaths
+        recovered = db.recovered
+        active_care = db.active_care
+        updated = db.updated
+    return {
+        "confirmed": {
+            "value": source['confirmed']['value'],
+            "diff": source['confirmed']['value'] - confirmed
+        },
+        "deaths": {
+            "value": source['deaths']['value'],
+            "diff": source['deaths']['value'] - deaths
+        },
+        "recovered": {
+            "value": source['recovered']['value'],
+            "diff": source['recovered']['value'] - recovered
+        },
+        "active_care": {
+            "value": source['activeCare']['value'],
+            "diff": source['activeCare']['value'] - active_care
+        },
+        "metadata": {
+            "country_id": "id",
+            "last_updated": updated.isoformat()
+        }
+    }
+
