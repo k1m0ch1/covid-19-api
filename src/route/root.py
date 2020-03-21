@@ -307,10 +307,10 @@ def _is_date(string, fuzzy=False):
 
 
 def _is_empty(string):
-    return 0 if string == "" else string
+    return 0 if string == "" or string is None else string
 
 
-def _set_value(before, after):
+def _set_value(current, before):
     result = {}
     keys = [
         'meninggal', 'positif', 'proses_pemantauan', 'proses_pengawasan',
@@ -323,12 +323,12 @@ def _set_value(before, after):
             ["tanggal", "meninggal", "positif",
                 "selesai_pengawasan", "proses_pemantauan"]:
             result[key] = {
-                "value": int(before[key]),
-                "diff": int(before[key]) -
-                int(_is_empty(after[key]))
+                "value": int(_is_empty(current[key])),
+                "diff": int(_is_empty(current[key])) -
+                int(_is_empty(before[key]))
             }
         else:
-            result[key] = {"value": int(before[key])
-                           if key not in ["tanggal"] else
-                           before[key]}
+            result[key] = {"value": int(_is_empty(current[key]))
+                           if not key == "tanggal" else
+                           _is_empty(current[key])}
     return result
