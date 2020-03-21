@@ -50,10 +50,22 @@ run this command
 docker run --restart on-failure --name gobot-covid k1m0ch1/gobot-covid
 ```
 The QR Code will be available in terminal for more less than 10 second, if timeout you need to run the first command again
-after the QR Code is succesfully scanned
+after the QR Code is succesfully scanned I prefer to run the container in the background by stop the container first with `Ctrl+C` and then run the container again with command `docker start gobot-covid`
 
-I prefer to run the container in the backgroun by stop the container first with `Ctrl+C` and then run the container again with command `docker start gobot-covid`
+### For advance usage
+- Session store
+This feature will enable to store the session for the later use, by adding the argument as the file name for sesion for example
+```
+docker run --restart on-failure --name gobot-covid k1m0ch1/gobot-covid MyPhoneNumber
+```
+the file `MyPhoneNumber.go` will be stored at `./session` folder
 
+the folder `session` in the container at path `/go/src/github.com/k1m0ch1/covid-19-api/session` so you can use `-v` parameter to put the session file in the localhost
+
+here is the complete parameter
+```
+docker run -v ~/session:/go/src/github.com/k1m0ch1/covid-19-api/session --restart on-failure --name gobot-covid k1m0ch1/gobot-covid MyPhoneNumber
+```
 
 # Endpoint
 
