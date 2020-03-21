@@ -2,19 +2,20 @@ package main
 
 import (
 	"encoding/gob"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"math/rand"
+	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
-	"strings"
-	"encoding/json"
-	"net/http"
-	"io/ioutil"
-	"math/rand"
 
 	b64 "encoding/base64"
+
 	qrcodeTerminal "github.com/Baozisoftware/qrcode-terminal-go"
 	whatsapp "github.com/Rhymen/go-whatsapp"
 )
@@ -22,7 +23,7 @@ import (
 var wah *whatsapp.Conn
 
 type waHandler struct {
-	c *whatsapp.Conn
+	c         *whatsapp.Conn
 	startTime uint64
 }
 
@@ -37,7 +38,7 @@ func parseNews(endpoint string) string {
 
 	jsonErr := json.Unmarshal(body, &result)
 	if jsonErr != nil {
-		log.Fatal("Break point 4 %s %s",jsonErr, result)
+		log.Fatal("Break point 4 %s %s", jsonErr, result)
 	}
 	reply := "Top Headlines\n\n"
 	for i := range result {
@@ -100,9 +101,9 @@ func parsedataID(url string) string {
 	}
 
 	t1, e := time.Parse(
-        time.RFC3339,
+		time.RFC3339,
 		fmt.Sprintf("%s+00:00", result["metadata"]["last_updated"]))
-	e=e
+	e = e
 
 	reply := fmt.Sprintf("Indonesia\n\nTerkonfirmasi: %.0f *(+%.0f)*\nMeninggal: %.0f *(+%.0f)*\nSembuh: %.0f *(+%.0f)*\nDalam Perawatan: %.0f *(+%.0f)*\n\nUpdate terakhir %s",
 		result["confirmed"]["value"], result["confirmed"]["diff"],
@@ -118,21 +119,22 @@ func parsedataID(url string) string {
 func (wh *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
 	// fmt.Printf("%v %v %v \n\t%v\n", message.Info.Timestamp, message.Info.Id, message.Info.RemoteJid, message.Text)
 	cm1 := fmt.Sprint(b64.StdEncoding.DecodeString("eWFoeWE="))
-	cmAr:= fmt.Sprint(b64.StdEncoding.DecodeString("Z2FudGVuZyBwaXNhbg=="))
-	introduction := fmt.Sprintf("Halo 🤗\n\nPerkenalan saya robot covid-19 untuk mendapatkan informasi tentang covid,"+
-	"panggil saya menggunakan awalan !covid\n\nPerintah yang tersedia :\n1. status (global cases)\n"+
-	"2. news (top headline news)\n3. id (indonesia cases)"+
-	"\n4. id info\n5. id news(top headline news indonesia)"+
-	"\n6. halo\n\nContoh : !covid status\n\nBantu kami di https://git.io/JvPbJ ❤️")
-	cm2:= fmt.Sprint(b64.StdEncoding.DecodeString("eW9hbmE="))
-	cmBr:= fmt.Sprint(b64.StdEncoding.DecodeString("bXkgcm9vdCBvZiBldmVyeXRoaW5n"))
-	id_info := fmt.Sprintf("🔔Informasi Corona seputar Indonesia🔔\n"+
-	"- Hotline COVID-19 Telepon 119 Ext 9\n\n"+
-	"- https://infeksiemerging.kemkes.go.id/ untuk Spot Kasus COVID-19\n\n"+
-	"- https://pikobar.jabarprov.go.id/ Pusat Informasi & Koordinasi COVID-19 Provinsi Jawa Barat\n\n"+
-	"- https://kawalcovid19.id/ Kawal informasi seputar COVID-19 secara tepat dan akurat.\n\n")
-	cm3:= fmt.Sprint(b64.StdEncoding.DecodeString("eWdnZHJhc2ls"))
-	cmCr:= fmt.Sprint(b64.StdEncoding.DecodeString("bXkgcGVhY2g="))
+	cmAr := fmt.Sprint(b64.StdEncoding.DecodeString("Z2FudGVuZyBwaXNhbg=="))
+	introduction := fmt.Sprintf("Halo 🤗\n\nPerkenalan saya robot covid-19 untuk mendapatkan informasi tentang covid," +
+		"panggil saya menggunakan awalan !covid\n\nPerintah yang tersedia :\n1. status (global cases)\n" +
+		"2. news (top headline news)\n3. id (indonesia cases)" +
+		"\n4. id info\n5. id news(top headline news indonesia)" +
+		"\n6. halo\n\nContoh : !covid status\n\nBantu kami di https://git.io/JvPbJ ❤️" +
+		"\n7. id nama_provinsi Contoh : !covid id jabar")
+	cm2 := fmt.Sprint(b64.StdEncoding.DecodeString("eW9hbmE="))
+	cmBr := fmt.Sprint(b64.StdEncoding.DecodeString("bXkgcm9vdCBvZiBldmVyeXRoaW5n"))
+	id_info := fmt.Sprintf("🔔Informasi Corona seputar Indonesia🔔\n" +
+		"- Hotline COVID-19 Telepon 119 Ext 9\n\n" +
+		"- https://infeksiemerging.kemkes.go.id/ untuk Spot Kasus COVID-19\n\n" +
+		"- https://pikobar.jabarprov.go.id/ Pusat Informasi & Koordinasi COVID-19 Provinsi Jawa Barat\n\n" +
+		"- https://kawalcovid19.id/ Kawal informasi seputar COVID-19 secara tepat dan akurat.\n\n")
+	cm3 := fmt.Sprint(b64.StdEncoding.DecodeString("eWdnZHJhc2ls"))
+	cmCr := fmt.Sprint(b64.StdEncoding.DecodeString("bXkgcGVhY2g="))
 
 	if !strings.Contains(strings.ToLower(message.Text), "!covid") || message.Info.Timestamp < wh.startTime {
 		return
@@ -147,18 +149,20 @@ func (wh *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
 		case "news":
 			reply = parseNews("")
 		case "status":
-			if len(command) > 2{
+			if len(command) > 2 {
 				reply = parsedataCountries(command[2])
 			} else {
 				reply = parsedata(fmt.Sprintf(covid19_api, "/"))
 			}
 		case "id":
-			if len(command) > 2{
+			if len(command) > 2 {
 				switch command[2] {
 				case "info":
 					reply = id_info
 				case "news":
 					reply = parseNews("/id")
+				case "jabar":
+					reply = parseDataCountryState(command[1], command[2])
 				default:
 					reply = parsedataID(fmt.Sprintf(covid19_api, "/id"))
 				}
@@ -181,12 +185,12 @@ func (wh *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
 	}
 
 	if len(command) > 1 && reply != "timeout" {
-		<-time.After(time.Duration(rand.Intn(7 - 3) + 3) * time.Second)
+		<-time.After(time.Duration(rand.Intn(7-3)+3) * time.Second)
 		go sendMessage(reply, message.Info.RemoteJid)
 	}
 }
 
-func countries(code string) string{
+func countries(code string) string {
 	url := "https://covid19-api.yggdrasil.id/countries"
 	body := reqUrl(url)
 
@@ -251,7 +255,7 @@ func sendMessage(message string, RJID string) {
 		Info: whatsapp.MessageInfo{
 			RemoteJid: RJID,
 		},
-		Text:        message,
+		Text: message,
 	}
 
 	msgId, err := wah.Send(msg)
@@ -324,18 +328,18 @@ func writeSession(session whatsapp.Session) error {
 	return nil
 }
 
-func getSessionName() string{
+func getSessionName() string {
 	mydir, err := os.Getwd()
 	if err != nil {
 		fmt.Println(err)
 	}
 	if _, err := os.Stat(mydir + "/session"); os.IsNotExist(err) {
-		os.MkdirAll(mydir + "/session", os.ModePerm)
+		os.MkdirAll(mydir+"/session", os.ModePerm)
 	}
 	sessionName := ""
 	if len(os.Args) == 1 {
-		sessionName =  mydir + "/session" + "/whatsappSession.gob"
-	}else{
+		sessionName = mydir + "/session" + "/whatsappSession.gob"
+	} else {
 		sessionName = mydir + "/session/" + os.Args[1] + ".gob"
 	}
 
@@ -359,7 +363,7 @@ func (h *waHandler) HandleError(err error) {
 	}
 }
 
-func reqUrl(url string) []byte{
+func reqUrl(url string) []byte {
 	spaceClient := http.Client{
 		Timeout: time.Second * 4,
 	}
@@ -371,13 +375,42 @@ func reqUrl(url string) []byte{
 
 	res, getErr := spaceClient.Do(req)
 	if getErr != nil {
-		log.Fatal("Break point 2 %s",getErr)
+		log.Fatal("Break point 2 %s", getErr)
 	}
 
 	body, readErr := ioutil.ReadAll(res.Body)
 	if readErr != nil {
-		log.Fatal("Break point 3 %s",readErr)
+		log.Fatal("Break point 3 %s", readErr)
 	}
 
 	return body
+}
+
+func parseDataCountryState(country_id string, state string) string {
+	url := "https://covid19-api.yggdrasil.id//status/%s/%s"
+	url = fmt.Sprintf(url, country_id, state)
+	body := reqUrl(url)
+
+	var result []map[string]interface{}
+
+	jsonErr := json.Unmarshal(body, &result)
+
+	if jsonErr != nil {
+		log.Fatal(jsonErr)
+	}
+	// meninggal := result[0]["meninggal"].(float64)
+	// positif := result[0]["positif"].(float64)
+	proses_pemantauan := result[0]["proses_pemantauan"]
+	proses_pengawasan := result[0]["proses_pengawasan"]
+	selesai_pemantauan := result[0]["selesai_pemantauan"]
+	selesai_pengawasan := result[0]["selesai_pengawasan"]
+	total_meninggal := result[0]["total_meninggal"].(float64)
+	total_odp := result[0]["total_odp"]
+	total_pdp := result[0]["total_pdp"]
+	total_positif_saat_ini := result[0]["total_positif_saat_ini"].(float64)
+	total_sembuh := result[0]["total_sembuh"].(float64)
+
+	return fmt.Sprintf("%s \n\n Total Meninggal: %.0f \n Positif: %.0f \n Proses Pemantauan: %s \n Proses Pengawasan: %s \n Selesai Pemantauan:%s \n Selesai Pengawasan: %s \n"+
+		" ODP: %s \n PDP: %s \n Sembuh: %.0f \n\n Data Ini Diambil Dari %s ", strings.Title(strings.ToUpper(state)), total_meninggal, total_positif_saat_ini, proses_pemantauan, proses_pengawasan, selesai_pemantauan, selesai_pengawasan, total_odp, total_pdp, total_sembuh, result[0]["source"])
+
 }
