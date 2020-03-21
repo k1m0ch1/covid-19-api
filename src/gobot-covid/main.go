@@ -124,8 +124,8 @@ func (wh *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
 		"panggil saya menggunakan awalan !covid\n\nPerintah yang tersedia :\n1. status (global cases)\n" +
 		"2. news (top headline news)\n3. id (indonesia cases)" +
 		"\n4. id info\n5. id news(top headline news indonesia)" +
-		"\n6. halo\n\nContoh : !covid status\n\nBantu kami di https://git.io/JvPbJ ❤️" +
-		"\n7. id nama_provinsi Contoh : !covid id jabar")
+		"\n6. halo\n\nContoh : !covid status\n" +
+		"\n7. id nama_provinsi Contoh : !covid id jabar \n \nBantu kami di https://git.io/JvPbJ ❤️")
 	cm2 := fmt.Sprint(b64.StdEncoding.DecodeString("eW9hbmE="))
 	cmBr := fmt.Sprint(b64.StdEncoding.DecodeString("bXkgcm9vdCBvZiBldmVyeXRoaW5n"))
 	id_info := fmt.Sprintf("🔔Informasi Corona seputar Indonesia🔔\n" +
@@ -387,7 +387,7 @@ func reqUrl(url string) []byte {
 }
 
 func parseDataCountryState(country_id string, state string) string {
-	url := "https://covid19-api.yggdrasil.id//status/%s/%s"
+	url := "https://covid19-api.yggdrasil.id/%s/%s"
 	url = fmt.Sprintf(url, country_id, state)
 	body := reqUrl(url)
 

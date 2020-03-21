@@ -204,7 +204,7 @@ def _get_today(**kwargs):
     return result
 
 
-@root.route('/status/<country_id>/<state>')
+@root.route('/id/<state>')
 def status_by_country_state(country_id, state):
     status_date = datetime.today().strftime('%d-%m-%Y')
     yesterday = datetime.today() - timedelta(days=1)
