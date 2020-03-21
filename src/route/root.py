@@ -204,6 +204,35 @@ def _get_today(**kwargs):
     return result
 
 
+@root.route('/id/<state>')
+def status_by_country_state(country_id, state):
+    status_date = datetime.today().strftime('%d-%m-%Y')
+    yesterday = datetime.today() - timedelta(days=1)
+    result = []
+    if country_id == 'id' and state in 'jabar' :
+        response = requests.get('https://coredata.jabarprov.go.id/analytics/covid19/aggregation.json')
+        json_resp = response.json()
+        return_json = search_list(json_resp,"tanggal",status_date)
+        if return_json.get('proses_pemantauan') is None: return_json['proses_pemantauan']=search_list(json_resp,"tanggal",yesterday.strftime('%d-%m-%Y')).get('proses_pemantauan')
+        if return_json.get('proses_pengawasan') is None: return_json['proses_pengawasan']=search_list(json_resp,"tanggal",yesterday.strftime('%d-%m-%Y')).get('proses_pengawasan')
+        if return_json.get('selesai_pemantauan') is None: return_json['selesai_pemantauan']=search_list(json_resp,"tanggal",yesterday.strftime('%d-%m-%Y')).get('selesai_pemantauan')
+        if return_json.get('selesai_pengawasan') is None: return_json['selesai_pengawasan']=search_list(json_resp,"tanggal",yesterday.strftime('%d-%m-%Y')).get('selesai_pengawasan')
+        if return_json.get('total_odp') is None: return_json['total_odp']=search_list(json_resp,"tanggal",yesterday.strftime('%d-%m-%Y')).get('total_odp')
+        if return_json.get('total_pdp') is None: return_json['total_pdp']=search_list(json_resp,"tanggal",yesterday.strftime('%d-%m-%Y')).get('total_pdp')
+        return_json['source']="https://pikobar.jabarprov.go.id/ "
+        result.append(return_json)
+        return jsonify(result), 200
+    return jsonify(result)
+
+
+def search_list(list,key,status_date):
+    """ For List Search base on tanggal """
+
+    for l in list:
+        if l[key] == status_date:
+            return l
+
+
 def _extract_handler(url):
     request = requests.get(url)
 
