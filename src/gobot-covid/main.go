@@ -398,8 +398,7 @@ func parseDataCountryState(country_id string, state string) string {
 	if jsonErr != nil {
 		log.Fatal(jsonErr)
 	}
-	// meninggal := result[0]["meninggal"].(float64)
-	// positif := result[0]["positif"].(float64)
+
 	proses_pemantauan := result[0]["proses_pemantauan"]
 	proses_pengawasan := result[0]["proses_pengawasan"]
 	selesai_pemantauan := result[0]["selesai_pemantauan"]
