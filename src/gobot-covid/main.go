@@ -100,10 +100,9 @@ func parsedataID(url string) string {
 		log.Fatal(jsonErr)
 	}
 
-	t1, e := time.Parse(
+	t1, _ := time.Parse(
 		time.RFC3339,
 		fmt.Sprintf("%s+00:00", result["metadata"]["last_updated"]))
-	e = e
 
 	reply := fmt.Sprintf("Indonesia\n\nTerkonfirmasi: %.0f *(+%.0f)*\nMeninggal: %.0f *(+%.0f)*\nSembuh: %.0f *(+%.0f)*\nDalam Perawatan: %.0f *(+%.0f)*\n\nUpdate terakhir %s",
 		result["confirmed"]["value"], result["confirmed"]["diff"],
@@ -388,8 +387,7 @@ func reqUrl(url string) []byte {
 }
 
 func parseDataCountryState(country_id string, state string) string {
-	// url := "https://covid19-api.yggdrasil.id/%s/%s"
-	url := "http://localhost:5001/%s/%s"
+	url := "https://covid19-api.yggdrasil.id/%s/%s"
 	url = fmt.Sprintf(url, country_id, state)
 	body := reqUrl(url)
 
@@ -418,9 +416,12 @@ func parseDataCountryState(country_id string, state string) string {
 	return fmt.Sprintf("%s \n\n Total Meninggal: %.0f \n Positif: %.0f " +
 		"\n Proses Pemantauan: %.0f \n Proses Pengawasan: %.0f \n Selesai Pemantauan: %.0f " +
 		"\n Selesai Pengawasan: %.0f \n ODP: %.0f \n PDP: %.0f \n Sembuh: %.0f " +
+		"\n\nUpdate terakhir %s" +
 		"\n\n Data Ini Diambil Dari %s ",
 		strings.Title(strings.ToUpper(state)), total_meninggal, total_positif_saat_ini,
 		proses_pemantauan, proses_pengawasan, selesai_pemantauan,
-		selesai_pengawasan, total_odp, total_pdp, total_sembuh, result["source"])
+		selesai_pengawasan, total_odp, total_pdp, total_sembuh,
+		result["tanggal"],
+		result["source"])
 
 }

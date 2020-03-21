@@ -210,11 +210,11 @@ def _get_today(**kwargs):
 @root.route('/id/<state>')
 def status_by_state(state):
     result = {}
-    key_state = [
-        'proses_pemantauan', 'proses_pengawasan', 'selesai_pemantauan',
-        'selesai_pengawasan', 'total_odp', 'total_pdp', 'total_meninggal',
-        'positif', 'sembuh', 'tanggal', 'total_positif_saat_ini',
-        'total_sembuh'
+    keys = [
+        'meninggal', 'positif', 'proses_pemantauan', 'proses_pengawasan',
+        'selesai_pemantauan', 'selesai_pengawasan', 'sembuh',
+        'tanggal', 'total_meninggal', 'total_odp', 'total_pdp',
+        'total_positif_saat_ini', 'total_sembuh'
     ]
     if 'jabar' in state:
         response = requests.get(JABAR)
@@ -225,11 +225,20 @@ def status_by_state(state):
                                   "tanggal", TODAY_STR['hyphen-dmy'])
         yeday_stat = _search_list(json_resp,
                                   "tanggal", YESTERDAY_STR['hyphen-dmy'])
-        for key in key_state:
-            if today_stat[key] is None:
-                result[key] = int(yeday_stat[key])
-            else:
-                result[key] = today_stat[key]
+
+        if today_stat["selesai_pengawasan"] is None:
+            twodaysago = _search_list(
+                json_resp, "tanggal",
+                datetime.strftime(TODAY - timedelta(days=2), "%d-%m-%Y"))
+            for key in keys:
+                result[key] = int(yeday_stat[key]) \
+                    if key not in ["tanggal"] else \
+                    yeday_stat[key]
+        else:
+            for key in keys:
+                result = int(today_stat[key]) \
+                    if key not in ["tanggal"] else \
+                    today_stat[key]
 
         result['source'] = "https://pikobar.jabarprov.go.id/"
         return jsonify(result), 200
