@@ -210,12 +210,6 @@ def _get_today(**kwargs):
 @root.route('/id/<state>')
 def status_by_state(state):
     result = {}
-    keys = [
-        'meninggal', 'positif', 'proses_pemantauan', 'proses_pengawasan',
-        'selesai_pemantauan', 'selesai_pengawasan', 'sembuh',
-        'tanggal', 'total_meninggal', 'total_odp', 'total_pdp',
-        'total_positif_saat_ini', 'total_sembuh'
-    ]
     if 'jabar' in state:
         response = requests.get(JABAR)
         if not response.status_code == 200:
@@ -230,17 +224,11 @@ def status_by_state(state):
             twodaysago = _search_list(
                 json_resp, "tanggal",
                 datetime.strftime(TODAY - timedelta(days=2), "%d-%m-%Y"))
-            for key in keys:
-                result[key] = int(yeday_stat[key]) \
-                    if key not in ["tanggal"] else \
-                    yeday_stat[key]
+            result = _set_value(yeday_stat, twodaysago)
         else:
-            for key in keys:
-                result = int(today_stat[key]) \
-                    if key not in ["tanggal"] else \
-                    today_stat[key]
+            result = _set_value(today_stat, yeday_stat)
 
-        result['source'] = "https://pikobar.jabarprov.go.id/"
+        result['source'] = {"value": "https://pikobar.jabarprov.go.id/"}
         return jsonify(result), 200
     if len(result) == 0:
         jsonify({"message": "Not Found"}), 404
@@ -316,3 +304,31 @@ def _is_date(string, fuzzy=False):
 
     except ValueError:
         return False
+
+
+def _is_empty(string):
+    return 0 if string == "" else string
+
+
+def _set_value(before, after):
+    result = {}
+    keys = [
+        'meninggal', 'positif', 'proses_pemantauan', 'proses_pengawasan',
+        'selesai_pemantauan', 'selesai_pengawasan', 'sembuh',
+        'tanggal', 'total_meninggal', 'total_odp', 'total_pdp',
+        'total_positif_saat_ini', 'total_sembuh'
+    ]
+    for key in keys:
+        if key not in \
+            ["tanggal", "meninggal", "positif",
+                "selesai_pengawasan", "proses_pemantauan"]:
+            result[key] = {
+                "value": int(before[key]),
+                "diff": int(before[key]) -
+                int(_is_empty(after[key]))
+            }
+        else:
+            result[key] = {"value": int(before[key])
+                           if key not in ["tanggal"] else
+                           before[key]}
+    return result

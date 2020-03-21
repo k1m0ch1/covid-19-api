@@ -13,6 +13,7 @@ import (
 	"strings"
 	"syscall"
 	"time"
+	"math"
 
 	b64 "encoding/base64"
 
@@ -71,7 +72,7 @@ func parsedataCountries(country_id string) string {
 		r += result[i]["recovered"].(float64)
 	}
 
-	return fmt.Sprintf("%s\n\nConfirmed: %.0f\nDeaths: %.0f\nRecovered: %.0f", countries(strings.ToUpper(country_id)), c, d, r)
+	return fmt.Sprintf("*%s*\n\nConfirmed: %.0f\nDeaths: %.0f\nRecovered: %.0f", countries(strings.ToUpper(country_id)), c, d, r)
 
 }
 
@@ -85,7 +86,7 @@ func parsedata(url string) string {
 		log.Fatal(jsonErr)
 	}
 
-	reply := fmt.Sprintf("Global Cases\n\nConfirmed: %.0f \nDeaths: %.0f \nRecovered: %.0f", result["confirmed"], result["deaths"], result["recovered"])
+	reply := fmt.Sprintf("*Global Cases*\n\nConfirmed: %.0f \nDeaths: %.0f \nRecovered: %.0f", result["confirmed"], result["deaths"], result["recovered"])
 
 	return reply
 }
@@ -104,22 +105,86 @@ func parsedataID(url string) string {
 		time.RFC3339,
 		fmt.Sprintf("%s+00:00", result["metadata"]["last_updated"]))
 
-	reply := fmt.Sprintf("Indonesia\n\nTerkonfirmasi: %.0f *(+%.0f)*\nMeninggal: %.0f *(+%.0f)*\nSembuh: %.0f *(+%.0f)*\nDalam Perawatan: %.0f *(+%.0f)*\n\nUpdate terakhir %s",
+	reply := fmt.Sprintf("*Indonesia*\n\nTerkonfirmasi: %.0f *(+%.0f)*\nMeninggal: %.0f *(+%.0f)*\nSembuh: %.0f *(+%.0f)*\nDalam Perawatan: %.0f *(+%.0f)*\n\nUpdate terakhir %s",
 		result["confirmed"]["value"], result["confirmed"]["diff"],
 		result["deaths"]["value"], result["deaths"]["diff"],
 		result["recovered"]["value"], result["recovered"]["diff"],
 		result["active_care"]["value"], result["active_care"]["diff"],
-		t1.Add(7*time.Hour).Format("02 Jan 06 15:04"))
+		t1.Add(7*time.Hour).Format("02 Jan 2006 15:04"))
 
 	return reply
 }
+
+func parseDataCountryState(country_id string, state string) string {
+	url := "https://covid19-api.yggdrasil.id/%s/%s"
+	url = fmt.Sprintf(url, country_id, state)
+	body := reqUrl(url)
+
+	var result map[string]map[string]interface{}
+
+	jsonErr := json.Unmarshal(body, &result)
+
+	if jsonErr != nil {
+		log.Fatal(jsonErr)
+	}
+
+	if _, ok := result["message"]; ok {
+		return "Belum Tersedia"
+	}
+
+	proses_pemantauan := result["proses_pemantauan"]["value"]
+	proses_pengawasan := result["proses_pengawasan"]["value"]
+	selesai_pemantauan := result["selesai_pemantauan"]["value"]
+	selesai_pengawasan := result["selesai_pengawasan"]["value"]
+	total_meninggal := result["total_meninggal"]["value"].(float64)
+	total_meninggal_diff := result["total_meninggal"]["diff"].(float64)
+	total_odp := result["total_odp"]["value"]
+	total_pdp := result["total_pdp"]["value"]
+	total_positif_saat_ini := result["total_positif_saat_ini"]["value"].(float64)
+	total_positif_saat_ini_diff := result["total_positif_saat_ini"]["diff"].(float64)
+	total_sembuh := result["total_sembuh"]["value"].(float64)
+	total_sembuh_diff := result["total_sembuh"]["diff"].(float64)
+
+	tmg := ""
+	if math.Signbit(total_meninggal_diff) {
+		tmg = fmt.Sprintf("%.0f", total_meninggal_diff)
+	}else{
+		tmg = fmt.Sprintf("+%.0f", total_meninggal_diff)
+	}
+
+	tpsi := ""
+	if math.Signbit(total_positif_saat_ini_diff) {
+		tpsi = fmt.Sprintf("%.0f", total_positif_saat_ini_diff)
+	}else{
+		tpsi = fmt.Sprintf("+%.0f", total_positif_saat_ini_diff)
+	}
+
+	ts := ""
+	if math.Signbit(total_sembuh_diff) {
+		ts = fmt.Sprintf("%.0f", total_sembuh_diff)
+	}else{
+		ts = fmt.Sprintf("+%.0f", total_sembuh_diff)
+	}
+
+	return fmt.Sprintf("*%s* \n\nSembuh: %.0f *(%s)*\nPositif: %.0f *(%s)*\nTotal Meninggal: %.0f *(%s)* \n" +
+		"\nProses Pemantauan: %.0f \nProses Pengawasan: %.0f \nSelesai Pemantauan: %.0f " +
+		"\nSelesai Pengawasan: %.0f \nODP: %.0f \nPDP: %.0f " +
+		"\n\nUpdate terakhir %s" +
+		"\n\n Data Ini Diambil Dari %s ",
+		strings.Title(strings.ToUpper(state)), total_sembuh, ts, total_positif_saat_ini, tpsi, total_meninggal, tmg,
+		proses_pemantauan, proses_pengawasan, selesai_pemantauan, selesai_pengawasan, total_odp, total_pdp,
+		result["tanggal"]["value"],
+		result["source"]["value"])
+
+}
+
 
 //Optional to be implemented. Implement HandleXXXMessage for the types you need.
 func (wh *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
 	// fmt.Printf("%v %v %v \n\t%v\n", message.Info.Timestamp, message.Info.Id, message.Info.RemoteJid, message.Text)
 	cm1 := fmt.Sprint(b64.StdEncoding.DecodeString("eWFoeWE="))
 	cmAr := fmt.Sprint(b64.StdEncoding.DecodeString("Z2FudGVuZyBwaXNhbg=="))
-	introduction := fmt.Sprintf("Halo 🤗\n\nPerkenalan saya robot covid-19 untuk mendapatkan informasi tentang covid," +
+	introduction := fmt.Sprintf("*Halo* 🤗\n\nPerkenalan saya robot covid-19 untuk mendapatkan informasi tentang covid," +
 		"panggil saya menggunakan awalan !covid\n\nPerintah yang tersedia :\n1. status (global cases)\n" +
 		"2. news (top headline news)\n3. id (indonesia cases)" +
 		"\n4. id nama_provinsi Contoh : !covid id jabar" +
@@ -164,7 +229,7 @@ func (wh *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
 				case "jabar":
 					reply = parseDataCountryState(command[1], command[2])
 				default:
-					reply = parsedataID(fmt.Sprintf(covid19_api, "/id"))
+					reply = "timeout"
 				}
 			} else {
 				reply = parsedataID(fmt.Sprintf(covid19_api, "/id"))
@@ -384,44 +449,4 @@ func reqUrl(url string) []byte {
 	}
 
 	return body
-}
-
-func parseDataCountryState(country_id string, state string) string {
-	url := "https://covid19-api.yggdrasil.id/%s/%s"
-	url = fmt.Sprintf(url, country_id, state)
-	body := reqUrl(url)
-
-	var result map[string]interface{}
-
-	jsonErr := json.Unmarshal(body, &result)
-
-	if jsonErr != nil {
-		log.Fatal(jsonErr)
-	}
-
-	if _, ok := result["message"]; ok {
-		return "Belum Tersedia"
-	}
-
-	proses_pemantauan := result["proses_pemantauan"]
-	proses_pengawasan := result["proses_pengawasan"]
-	selesai_pemantauan := result["selesai_pemantauan"]
-	selesai_pengawasan := result["selesai_pengawasan"]
-	total_meninggal := result["total_meninggal"]
-	total_odp := result["total_odp"]
-	total_pdp := result["total_pdp"]
-	total_positif_saat_ini := result["total_positif_saat_ini"]
-	total_sembuh := result["total_sembuh"]
-
-	return fmt.Sprintf("%s \n\n Total Meninggal: %.0f \n Positif: %.0f " +
-		"\n Proses Pemantauan: %.0f \n Proses Pengawasan: %.0f \n Selesai Pemantauan: %.0f " +
-		"\n Selesai Pengawasan: %.0f \n ODP: %.0f \n PDP: %.0f \n Sembuh: %.0f " +
-		"\n\nUpdate terakhir %s" +
-		"\n\n Data Ini Diambil Dari %s ",
-		strings.Title(strings.ToUpper(state)), total_meninggal, total_positif_saat_ini,
-		proses_pemantauan, proses_pengawasan, selesai_pemantauan,
-		selesai_pengawasan, total_odp, total_pdp, total_sembuh,
-		result["tanggal"],
-		result["source"])
-
 }
