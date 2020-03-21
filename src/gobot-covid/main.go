@@ -17,7 +17,7 @@ import (
 
 	b64 "encoding/base64"
 
-	qrcodeTerminal "github.com/Baozisoftware/qrcode-terminal-go"
+	qrcodeTerminal "github.com/mdp/qrterminal/v3"
 	whatsapp "github.com/Rhymen/go-whatsapp"
 )
 
@@ -345,9 +345,15 @@ func login(wac *whatsapp.Conn) error {
 	} else {
 		//no saved session -> regular login
 		qr := make(chan string)
-		go func() {
-			terminal := qrcodeTerminal.New()
-			terminal.Get(<-qr).Print()
+		go func(){
+			config := qrcodeTerminal.Config{
+				Level: qrcodeTerminal.L,
+				Writer: os.Stdout,
+				BlackChar: qrcodeTerminal.WHITE,
+				WhiteChar: qrcodeTerminal.BLACK,
+				QuietZone: 1,
+			}
+			qrcodeTerminal.GenerateWithConfig(<-qr, config)
 		}()
 		session, err = wac.Login(qr)
 		if err != nil {
