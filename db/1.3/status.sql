@@ -8,7 +8,7 @@ CREATE TABLE status (
     id integer NOT NULL DEFAULT nextval('status_id_seq'),
 		confirmed integer NOT NULL,
 		recovered integer NOT NULL,
-		active_recovered integer NOT NULL,
+		active_care integer NOT NULL,
 		deaths integer NOT NULL,
 		country_id VARCHAR NOT NULL,
 		created TIMESTAMP,

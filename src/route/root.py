@@ -83,8 +83,6 @@ def id():
         getData = [_id_beauty(data, row) for row in alldata]
         dbDate = parser.parse(getData[0]["metadata"]["last_updated"]) \
             .replace(tzinfo=None)
-        print(updated)
-        print(dbDate)
         if not updated == dbDate:
             new_status = Status(
                 confirmed=data['confirmed']['value'],

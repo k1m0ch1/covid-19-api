@@ -64,7 +64,7 @@ class Story(Base):
     availability = Column(String(100), nullable=False)
     num = Column(Integer(), nullable=True)
     price = Column(Integer(), nullable=True)
-    validity = Column(String(50), nullable=True)
+    validity = Column(String(50), nullable=True, default="MASKER BIASA")
     created = ServerTimestamp(False)
     updated = ServerTimestamp(True)
 

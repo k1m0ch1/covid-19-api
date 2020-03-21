@@ -1,7 +1,9 @@
 from flask import Blueprint, jsonify, request
 from src.cache import cache
 import time
+import collections
 from sqlalchemy import or_
+from datetime import datetime, timedelta
 
 from src.db import session
 from src.models import User, Place, Story
@@ -31,6 +33,14 @@ def queryPlaces():
 @maskmap.route('/places')
 @cache.cached(timeout=50)
 def getAllPlaces():
+    diff = (datetime.utcnow() - timedelta(days=2))
+    if request.args.get("days"):
+        diff = (datetime.utcnow() -
+                timedelta(days=int(request.args.get("days"))))
+    if request.args.get("hours"):
+        diff = (datetime.utcnow() -
+                timedelta(days=int(request.args.get("hours"))))
+
     places = session.query(Place).all()
 
     if len(places) == 0:
@@ -140,10 +150,9 @@ def _placeDict(place):
         "lat": place.lat,
         "long": place.lng,
         "description": place.description,
-        "created": time.mktime(place.created.timetuple()),
-        "story": [
-            _storyDict(row) for row in place.story
-        ]
+        "created": place.created.isoformat(),
+        "availability": _groupSort(place.story),
+        "story": [_storyDict(row) for row in place.story]
     }
 
 
@@ -158,3 +167,16 @@ def _storyDict(story):
         "validity": story.validity,
         "created": time.mktime(story.created.timetuple())
     }
+
+
+def _groupSort(story):
+    data = {}
+    for row in story:
+        if row.validity not in data:
+            data[row.validity] = {}
+
+        if row.availability not in data[row.validity]:
+            data[row.validity][row.availability] = 0
+
+        data[row.validity][row.availability] += 1
+    return data
