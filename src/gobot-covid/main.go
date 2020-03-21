@@ -104,7 +104,7 @@ func parsedataID(url string) string {
 		fmt.Sprintf("%s+00:00", result["metadata"]["last_updated"]))
 	e=e
 
-	reply := fmt.Sprintf("Indonesia\n\nTerkonfirmasi: %.0f *+%.0f*\nMeninggal: %.0f *+%.0f*\nSembuh: %.0f *+%.0f*\nDalam Perawatan: %.0f *+%.0f*\n\nUpdate terakhir %s",
+	reply := fmt.Sprintf("Indonesia\n\nTerkonfirmasi: %.0f *(+%.0f)*\nMeninggal: %.0f *(+%.0f)*\nSembuh: %.0f *(+%.0f)*\nDalam Perawatan: %.0f *(+%.0f)*\n\nUpdate terakhir %s",
 		result["confirmed"]["value"], result["confirmed"]["diff"],
 		result["deaths"]["value"], result["deaths"]["diff"],
 		result["recovered"]["value"], result["recovered"]["diff"],
@@ -121,9 +121,9 @@ func (wh *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
 	cmAr:= fmt.Sprint(b64.StdEncoding.DecodeString("Z2FudGVuZyBwaXNhbg=="))
 	introduction := fmt.Sprintf("Halo 🤗\n\nPerkenalan saya robot covid-19 untuk mendapatkan informasi tentang covid,"+
 	"panggil saya menggunakan awalan !covid\n\nPerintah yang tersedia :\n1. status (global cases)\n"+
-	"2. news (top headline news)\n3. id (indonesia cases"+
+	"2. news (top headline news)\n3. id (indonesia cases)"+
 	"\n4. id info\n5. id news(top headline news indonesia)"+
-	"\n7. halo\n\nContoh : !covid status\n\nBantu kami di https://git.io/JvPbJ ❤️")
+	"\n6. halo\n\nContoh : !covid status\n\nBantu kami di https://git.io/JvPbJ ❤️")
 	cm2:= fmt.Sprint(b64.StdEncoding.DecodeString("eW9hbmE="))
 	cmBr:= fmt.Sprint(b64.StdEncoding.DecodeString("bXkgcm9vdCBvZiBldmVyeXRoaW5n"))
 	id_info := fmt.Sprintf("🔔Informasi Corona seputar Indonesia🔔\n"+
