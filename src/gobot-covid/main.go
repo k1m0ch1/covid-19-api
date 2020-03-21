@@ -349,8 +349,8 @@ func login(wac *whatsapp.Conn) error {
 			config := qrcodeTerminal.Config{
 				Level: qrcodeTerminal.L,
 				Writer: os.Stdout,
-				BlackChar: qrcodeTerminal.WHITE,
-				WhiteChar: qrcodeTerminal.BLACK,
+				BlackChar: qrcodeTerminal.BLACK,
+				WhiteChar: qrcodeTerminal.WHITE,
 				QuietZone: 1,
 			}
 			qrcodeTerminal.GenerateWithConfig(<-qr, config)
