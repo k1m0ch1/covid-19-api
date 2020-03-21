@@ -17,17 +17,20 @@ root = Blueprint('root', __name__)
 _ = environ.get
 DATASET = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-%s.csv" # noqa
 DATASET_ALL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/%s.csv" # noqa
+JABAR = 'https://coredata.jabarprov.go.id/analytics/covid19/aggregation.json'
 DEFAULT_KEYS = ['Confirmed', 'Deaths', 'Recovered']
 TODAY = datetime.utcnow().date()
 NEWSAPI_KEY = _('NEWSAPI_KEY', "xxxxxxxxxx")
 NEWSAPI_HOST = _('NEWSAPI_HOST', "http://newsapi.org/v2/top-headlines")
 YESTERDAY_STR = {
-    "slash": datetime.strftime(TODAY - timedelta(1), "%-m/%d/%y"),
-    "hyphen": datetime.strftime(TODAY - timedelta(1), "%m-%d-%Y")
+    "slash": datetime.strftime(TODAY - timedelta(days=1), "%-m/%d/%y"),
+    "hyphen": datetime.strftime(TODAY - timedelta(days=1), "%m-%d-%Y"),
+    "hyphen-dmy": datetime.strftime(TODAY - timedelta(days=1), "%d-%m-%Y"),
 }
 TODAY_STR = {
     "slash": TODAY.strftime("%-m/%d/%y"),
-    "hyphen": TODAY.strftime("%m-%d-%Y")
+    "hyphen": TODAY.strftime("%m-%d-%Y"),
+    "hyphen-dmy": TODAY.strftime("%d-%m-%Y"),
 }
 
 
@@ -205,27 +208,37 @@ def _get_today(**kwargs):
 
 
 @root.route('/id/<state>')
-def status_by_country_state(country_id, state):
-    status_date = datetime.today().strftime('%d-%m-%Y')
-    yesterday = datetime.today() - timedelta(days=1)
-    result = []
-    if country_id == 'id' and state in 'jabar' :
-        response = requests.get('https://coredata.jabarprov.go.id/analytics/covid19/aggregation.json')
+def status_by_state(state):
+    result = {}
+    key_state = [
+        'proses_pemantauan', 'proses_pengawasan', 'selesai_pemantauan',
+        'selesai_pengawasan', 'total_odp', 'total_pdp', 'total_meninggal',
+        'positif', 'sembuh', 'tanggal', 'total_positif_saat_ini',
+        'total_sembuh'
+    ]
+    if 'jabar' in state:
+        response = requests.get(JABAR)
+        if not response.status_code == 200:
+            jsonify({"message": f"Error when trying to crawl {JABAR}"}), 404
         json_resp = response.json()
-        return_json = search_list(json_resp,"tanggal",status_date)
-        if return_json.get('proses_pemantauan') is None: return_json['proses_pemantauan']=search_list(json_resp,"tanggal",yesterday.strftime('%d-%m-%Y')).get('proses_pemantauan')
-        if return_json.get('proses_pengawasan') is None: return_json['proses_pengawasan']=search_list(json_resp,"tanggal",yesterday.strftime('%d-%m-%Y')).get('proses_pengawasan')
-        if return_json.get('selesai_pemantauan') is None: return_json['selesai_pemantauan']=search_list(json_resp,"tanggal",yesterday.strftime('%d-%m-%Y')).get('selesai_pemantauan')
-        if return_json.get('selesai_pengawasan') is None: return_json['selesai_pengawasan']=search_list(json_resp,"tanggal",yesterday.strftime('%d-%m-%Y')).get('selesai_pengawasan')
-        if return_json.get('total_odp') is None: return_json['total_odp']=search_list(json_resp,"tanggal",yesterday.strftime('%d-%m-%Y')).get('total_odp')
-        if return_json.get('total_pdp') is None: return_json['total_pdp']=search_list(json_resp,"tanggal",yesterday.strftime('%d-%m-%Y')).get('total_pdp')
-        return_json['source']="https://pikobar.jabarprov.go.id/ "
-        result.append(return_json)
+        today_stat = _search_list(json_resp,
+                                  "tanggal", TODAY_STR['hyphen-dmy'])
+        yeday_stat = _search_list(json_resp,
+                                  "tanggal", YESTERDAY_STR['hyphen-dmy'])
+        for key in key_state:
+            if today_stat[key] is None:
+                result[key] = int(yeday_stat[key])
+            else:
+                result[key] = today_stat[key]
+
+        result['source'] = "https://pikobar.jabarprov.go.id/"
         return jsonify(result), 200
+    if len(result) == 0:
+        jsonify({"message": "Not Found"}), 404
     return jsonify(result)
 
 
-def search_list(list,key,status_date):
+def _search_list(list, key, status_date):
     """ For List Search base on tanggal """
 
     for l in list:
@@ -280,3 +293,17 @@ def _id_beauty(source, db):
         }
     }
 
+
+def _is_date(string, fuzzy=False):
+    """
+    Return whether the string can be interpreted as a date.
+
+    :param string: str, string to check for date
+    :param fuzzy: bool, ignore unknown tokens in string if True
+    """
+    try:
+        parser.parse(string, fuzzy=fuzzy)
+        return True
+
+    except ValueError:
+        return False

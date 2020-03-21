@@ -123,9 +123,10 @@ func (wh *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
 	introduction := fmt.Sprintf("Halo 🤗\n\nPerkenalan saya robot covid-19 untuk mendapatkan informasi tentang covid," +
 		"panggil saya menggunakan awalan !covid\n\nPerintah yang tersedia :\n1. status (global cases)\n" +
 		"2. news (top headline news)\n3. id (indonesia cases)" +
-		"\n4. id info\n5. id news(top headline news indonesia)" +
-		"\n6. halo\n\nContoh : !covid status\n" +
-		"\n7. id nama_provinsi Contoh : !covid id jabar \n \nBantu kami di https://git.io/JvPbJ ❤️")
+		"\n4. id nama_provinsi Contoh : !covid id jabar" +
+		"\n5. id info\n6. id news(top headline news indonesia)" +
+		"\n7. halo\n\nContoh : !covid status\n" +
+		"\n\nBantu kami di https://git.io/JvPbJ ❤️")
 	cm2 := fmt.Sprint(b64.StdEncoding.DecodeString("eW9hbmE="))
 	cmBr := fmt.Sprint(b64.StdEncoding.DecodeString("bXkgcm9vdCBvZiBldmVyeXRoaW5n"))
 	id_info := fmt.Sprintf("🔔Informasi Corona seputar Indonesia🔔\n" +
@@ -387,11 +388,12 @@ func reqUrl(url string) []byte {
 }
 
 func parseDataCountryState(country_id string, state string) string {
-	url := "https://covid19-api.yggdrasil.id/%s/%s"
+	// url := "https://covid19-api.yggdrasil.id/%s/%s"
+	url := "http://localhost:5001/%s/%s"
 	url = fmt.Sprintf(url, country_id, state)
 	body := reqUrl(url)
 
-	var result []map[string]interface{}
+	var result map[string]interface{}
 
 	jsonErr := json.Unmarshal(body, &result)
 
@@ -399,17 +401,26 @@ func parseDataCountryState(country_id string, state string) string {
 		log.Fatal(jsonErr)
 	}
 
-	proses_pemantauan := result[0]["proses_pemantauan"]
-	proses_pengawasan := result[0]["proses_pengawasan"]
-	selesai_pemantauan := result[0]["selesai_pemantauan"]
-	selesai_pengawasan := result[0]["selesai_pengawasan"]
-	total_meninggal := result[0]["total_meninggal"].(float64)
-	total_odp := result[0]["total_odp"]
-	total_pdp := result[0]["total_pdp"]
-	total_positif_saat_ini := result[0]["total_positif_saat_ini"].(float64)
-	total_sembuh := result[0]["total_sembuh"].(float64)
+	if _, ok := result["message"]; ok {
+		return "Belum Tersedia"
+	}
 
-	return fmt.Sprintf("%s \n\n Total Meninggal: %.0f \n Positif: %.0f \n Proses Pemantauan: %s \n Proses Pengawasan: %s \n Selesai Pemantauan:%s \n Selesai Pengawasan: %s \n"+
-		" ODP: %s \n PDP: %s \n Sembuh: %.0f \n\n Data Ini Diambil Dari %s ", strings.Title(strings.ToUpper(state)), total_meninggal, total_positif_saat_ini, proses_pemantauan, proses_pengawasan, selesai_pemantauan, selesai_pengawasan, total_odp, total_pdp, total_sembuh, result[0]["source"])
+	proses_pemantauan := result["proses_pemantauan"]
+	proses_pengawasan := result["proses_pengawasan"]
+	selesai_pemantauan := result["selesai_pemantauan"]
+	selesai_pengawasan := result["selesai_pengawasan"]
+	total_meninggal := result["total_meninggal"]
+	total_odp := result["total_odp"]
+	total_pdp := result["total_pdp"]
+	total_positif_saat_ini := result["total_positif_saat_ini"]
+	total_sembuh := result["total_sembuh"]
+
+	return fmt.Sprintf("%s \n\n Total Meninggal: %.0f \n Positif: %.0f " +
+		"\n Proses Pemantauan: %.0f \n Proses Pengawasan: %.0f \n Selesai Pemantauan: %.0f " +
+		"\n Selesai Pengawasan: %.0f \n ODP: %.0f \n PDP: %.0f \n Sembuh: %.0f " +
+		"\n\n Data Ini Diambil Dari %s ",
+		strings.Title(strings.ToUpper(state)), total_meninggal, total_positif_saat_ini,
+		proses_pemantauan, proses_pengawasan, selesai_pemantauan,
+		selesai_pengawasan, total_odp, total_pdp, total_sembuh, result["source"])
 
 }
