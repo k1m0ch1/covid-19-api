@@ -17,7 +17,6 @@ root = Blueprint('root', __name__)
 _ = environ.get
 DATASET = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-%s.csv" # noqa
 DATASET_ALL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/%s.csv" # noqa
-JABAR = 'https://coredata.jabarprov.go.id/analytics/covid19/aggregation.json'
 DEFAULT_KEYS = ['Confirmed', 'Deaths', 'Recovered']
 TODAY = datetime.utcnow().date()
 NEWSAPI_KEY = _('NEWSAPI_KEY', "xxxxxxxxxx")
@@ -72,50 +71,6 @@ def countries():
     with open('src/countries.json', 'rb') as outfile:
         return jsonify(json.load(outfile)), 200
     return jsonify({"message": "Error Occured"}), 500
-
-
-@root.route('/id')
-def id():
-    req = requests.get("https://kawalcovid19.harippe.id/api/summary")
-    data = req.json()
-    updated = parser.parse(data['metadata']['lastUpdatedAt']) \
-        .replace(tzinfo=None)
-    alldata = session.query(Status).order_by(Status.id.desc()).all()
-    dbDate = ""
-    if len(alldata) > 0:
-        getData = [_id_beauty(data, row) for row in alldata]
-        dbDate = parser.parse(getData[0]["metadata"]["last_updated"]) \
-            .replace(tzinfo=None)
-        if not updated == dbDate:
-            new_status = Status(
-                confirmed=data['confirmed']['value'],
-                deaths=data['deaths']['value'],
-                recovered=data['recovered']['value'],
-                active_care=data['activeCare']['value'],
-                country_id="id",
-                created=updated,
-                updated=updated
-            )
-            session.add(new_status)
-        for row in getData:
-            if not row['confirmed']['diff'] == 0 and \
-               not row['deaths']['diff'] == 0 and \
-               not row['recovered']['diff'] == 0 and \
-               not row['active_care']['diff'] == 0:
-                return jsonify(row), 200
-        return jsonify(getData[0]), 200
-    else:
-        new_status = Status(
-            confirmed=data['confirmed']['value'],
-            deaths=data['deaths']['value'],
-            recovered=data['recovered']['value'],
-            active_care=data['activeCare']['value'],
-            country_id="id",
-            created=updated,
-            updated=updated
-        )
-        session.add(new_status)
-        return jsonify(_id_beauty(data, 0)), 200
 
 
 @root.route('/countries/<country_id>')
@@ -207,43 +162,6 @@ def _get_today(**kwargs):
     return result
 
 
-@root.route('/id/<state>')
-@cache.cached(timeout=50)
-def status_by_state(state):
-    result = {}
-    if 'jabar' in state:
-        response = requests.get(JABAR)
-        if not response.status_code == 200:
-            jsonify({"message": f"Error when trying to crawl {JABAR}"}), 404
-        json_resp = response.json()
-        today_stat = _search_list(json_resp,
-                                  "tanggal", TODAY_STR['hyphen-dmy'])
-        yeday_stat = _search_list(json_resp,
-                                  "tanggal", YESTERDAY_STR['hyphen-dmy'])
-
-        if today_stat["selesai_pengawasan"] is None:
-            twodaysago = _search_list(
-                json_resp, "tanggal",
-                datetime.strftime(TODAY - timedelta(days=2), "%d-%m-%Y"))
-            result = _set_value(yeday_stat, twodaysago)
-        else:
-            result = _set_value(today_stat, yeday_stat)
-
-        result['source'] = {"value": "https://pikobar.jabarprov.go.id/"}
-        return jsonify(result), 200
-    if len(result) == 0:
-        jsonify({"message": "Not Found"}), 404
-    return jsonify(result)
-
-
-def _search_list(list, key, status_date):
-    """ For List Search base on tanggal """
-
-    for l in list:
-        if l[key] == status_date:
-            return l
-
-
 def _extract_handler(url):
     request = requests.get(url)
 
@@ -251,85 +169,3 @@ def _extract_handler(url):
         return False
 
     return [item for item in csv.DictReader(request.text.splitlines())]
-
-
-def _id_beauty(source, db):
-
-    if db == 0:
-        confirmed = 0
-        deaths = 0
-        recovered = 0
-        active_care = 0
-        updated = parser.parse(source['metadata']['lastUpdatedAt']) \
-            .replace(tzinfo=None)
-    else:
-        confirmed = db.confirmed
-        deaths = db.deaths
-        recovered = db.recovered
-        active_care = db.active_care
-        updated = db.updated
-    return {
-        "confirmed": {
-            "value": source['confirmed']['value'],
-            "diff": source['confirmed']['value'] - confirmed
-        },
-        "deaths": {
-            "value": source['deaths']['value'],
-            "diff": source['deaths']['value'] - deaths
-        },
-        "recovered": {
-            "value": source['recovered']['value'],
-            "diff": source['recovered']['value'] - recovered
-        },
-        "active_care": {
-            "value": source['activeCare']['value'],
-            "diff": source['activeCare']['value'] - active_care
-        },
-        "metadata": {
-            "country_id": "id",
-            "last_updated": updated.isoformat()
-        }
-    }
-
-
-def _is_date(string, fuzzy=False):
-    """
-    Return whether the string can be interpreted as a date.
-
-    :param string: str, string to check for date
-    :param fuzzy: bool, ignore unknown tokens in string if True
-    """
-    try:
-        parser.parse(string, fuzzy=fuzzy)
-        return True
-
-    except ValueError:
-        return False
-
-
-def _is_empty(string):
-    return 0 if string == "" or string is None else string
-
-
-def _set_value(current, before):
-    result = {}
-    keys = [
-        'meninggal', 'positif', 'proses_pemantauan', 'proses_pengawasan',
-        'selesai_pemantauan', 'selesai_pengawasan', 'sembuh',
-        'tanggal', 'total_meninggal', 'total_odp', 'total_pdp',
-        'total_positif_saat_ini', 'total_sembuh'
-    ]
-    for key in keys:
-        if key not in \
-            ["tanggal", "meninggal", "positif",
-                "selesai_pengawasan", "proses_pemantauan"]:
-            result[key] = {
-                "value": int(_is_empty(current[key])),
-                "diff": int(_is_empty(current[key])) -
-                int(_is_empty(before[key]))
-            }
-        else:
-            result[key] = {"value": int(_is_empty(current[key]))
-                           if not key == "tanggal" else
-                           _is_empty(current[key])}
-    return result
