@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from flask import request
+import re
 
 
 TODAY = datetime.utcnow().date()
@@ -22,11 +23,12 @@ def is_empty(string):
 
 
 def is_bot():
-    return request.headers.get('User-Agent') == 'gobot-covid19/2.0'
+    return request.headers.get('User-Agent') == 'Go-http-client/1.1' or \
+        request.headers.get('User-Agent') == 'gobot-covid19/2.0'
 
 
 def is_not_bot():
-    return request.headers.get('User-Agent') != 'gobot-covid19/2.0'
+    return not request.headers.get('User-Agent') == 'gobot-covid19/2.0'
 
 
 HOTLINE = [
