@@ -208,6 +208,7 @@ def _get_today(**kwargs):
 
 
 @root.route('/id/<state>')
+@cache.cached(timeout=50)
 def status_by_state(state):
     result = {}
     if 'jabar' in state:

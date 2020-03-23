@@ -16,7 +16,6 @@ import (
 	"math"
 
 	b64 "encoding/base64"
-
 	qrcodeTerminal "github.com/mdp/qrterminal/v3"
 	whatsapp "github.com/Rhymen/go-whatsapp"
 )
@@ -28,12 +27,11 @@ type waHandler struct {
 	startTime uint64
 }
 
+var url = "https://covid19-api.yggdrasil.id%s"
+
+
 func parseNews(endpoint string) string {
-
-	url := "https://covid19-api.yggdrasil.id/news%s"
-	url = fmt.Sprintf(url, endpoint)
-
-	body := reqUrl(url)
+	body := reqUrl(fmt.Sprintf(url + "%s", "/news", endpoint))
 
 	var result []map[string]interface{}
 
@@ -41,6 +39,7 @@ func parseNews(endpoint string) string {
 	if jsonErr != nil {
 		log.Fatal("Break point 4 %s %s", jsonErr, result)
 	}
+
 	reply := "Top Headlines\n\n"
 	for i := range result {
 		reply = reply + fmt.Sprintf("%s\n%s\n\n", result[i]["title"], result[i]["url"])
@@ -50,10 +49,7 @@ func parseNews(endpoint string) string {
 }
 
 func parsedataCountries(country_id string) string {
-	url := "https://covid19-api.yggdrasil.id/countries/%s"
-	url = fmt.Sprintf(url, country_id)
-
-	body := reqUrl(url)
+	body := reqUrl(fmt.Sprintf(url + "%s", "/countries", country_id))
 
 	var result []map[string]interface{}
 
@@ -105,7 +101,9 @@ func parsedataID(url string) string {
 		time.RFC3339,
 		fmt.Sprintf("%s+00:00", result["metadata"]["last_updated"]))
 
-	reply := fmt.Sprintf("*Indonesia*\n\nTerkonfirmasi: %.0f *(+%.0f)*\nMeninggal: %.0f *(+%.0f)*\nSembuh: %.0f *(+%.0f)*\nDalam Perawatan: %.0f *(+%.0f)*\n\nUpdate terakhir %s",
+	reply := fmt.Sprintf("*Indonesia*\n\nTerkonfirmasi: %.0f *(+%.0f)*\nMeninggal: %.0f *(+%.0f)*\nSembuh: %.0f *(+%.0f)*" +
+		"\nDalam Perawatan: %.0f *(+%.0f)*\n\nUpdate terakhir %s\n\n" +
+		"\n\n Data Ini Diambil Dari https://kawalcovid19.id/ ",
 		result["confirmed"]["value"], result["confirmed"]["diff"],
 		result["deaths"]["value"], result["deaths"]["diff"],
 		result["recovered"]["value"], result["recovered"]["diff"],
@@ -132,50 +130,22 @@ func parseDataCountryState(country_id string, state string) string {
 		return "Belum Tersedia"
 	}
 
-	proses_pemantauan := result["proses_pemantauan"]["value"]
-	proses_pengawasan := result["proses_pengawasan"]["value"]
-	selesai_pemantauan := result["selesai_pemantauan"]["value"]
-	selesai_pengawasan := result["selesai_pengawasan"]["value"]
-	total_meninggal := result["total_meninggal"]["value"].(float64)
 	total_meninggal_diff := result["total_meninggal"]["diff"].(float64)
-	total_odp := result["total_odp"]["value"]
-	total_pdp := result["total_pdp"]["value"]
-	total_positif_saat_ini := result["total_positif_saat_ini"]["value"].(float64)
 	total_positif_saat_ini_diff := result["total_positif_saat_ini"]["diff"].(float64)
-	total_sembuh := result["total_sembuh"]["value"].(float64)
 	total_sembuh_diff := result["total_sembuh"]["diff"].(float64)
 
-	tmg := ""
-	if math.Signbit(total_meninggal_diff) {
-		tmg = fmt.Sprintf("%.0f", total_meninggal_diff)
-	}else{
-		tmg = fmt.Sprintf("+%.0f", total_meninggal_diff)
-	}
-
-	tpsi := ""
-	if math.Signbit(total_positif_saat_ini_diff) {
-		tpsi = fmt.Sprintf("%.0f", total_positif_saat_ini_diff)
-	}else{
-		tpsi = fmt.Sprintf("+%.0f", total_positif_saat_ini_diff)
-	}
-
-	ts := ""
-	if math.Signbit(total_sembuh_diff) {
-		ts = fmt.Sprintf("%.0f", total_sembuh_diff)
-	}else{
-		ts = fmt.Sprintf("+%.0f", total_sembuh_diff)
-	}
-
-	return fmt.Sprintf("*%s* \n\nSembuh: %.0f *(%s)*\nPositif: %.0f *(%s)*\nTotal Meninggal: %.0f *(%s)* \n" +
+	return fmt.Sprintf("*%s* \n\nSembuh: %.0f *(%s)*\n" +
+		"Positif: %.0f *(%s)*\nTotal Meninggal: %.0f *(%s)* \n" +
 		"\nProses Pemantauan: %.0f \nProses Pengawasan: %.0f \nSelesai Pemantauan: %.0f " +
 		"\nSelesai Pengawasan: %.0f \nODP: %.0f \nPDP: %.0f " +
 		"\n\nUpdate terakhir %s" +
 		"\n\n Data Ini Diambil Dari %s ",
-		strings.Title(strings.ToUpper(state)), total_sembuh, ts, total_positif_saat_ini, tpsi, total_meninggal, tmg,
-		proses_pemantauan, proses_pengawasan, selesai_pemantauan, selesai_pengawasan, total_odp, total_pdp,
-		result["tanggal"]["value"],
-		result["source"]["value"])
-
+		strings.Title(strings.ToUpper(state)), result["total_sembuh"]["value"].(float64), printPositive(total_sembuh_diff),
+		result["total_positif_saat_ini"]["value"].(float64), printPositive(total_positif_saat_ini_diff),
+		result["total_meninggal"]["value"].(float64), printPositive(total_meninggal_diff),
+		result["proses_pemantauan"]["value"], result["proses_pengawasan"]["value"], result["selesai_pemantauan"]["value"],
+		result["selesai_pengawasan"]["value"], result["total_odp"]["value"], result["total_pdp"]["value"],
+		result["tanggal"]["value"], result["source"]["value"])
 }
 
 
@@ -268,62 +238,7 @@ func countries(code string) string {
 
 	for key, val := range result["countries"] {
 		if val == code {
-			return key
-		}
-	}
-
-	return "Not Found"
-}
-
-func main() {
-	//create new WhatsApp connection
-	wac, err := whatsapp.NewConn(5 * time.Second)
-	if err != nil {
-		log.Fatalf("error creating connection: %v\n", err)
-	}
-
-	//Add handler
-	wac.AddHandler(&waHandler{wac, uint64(time.Now().Unix())})
-
-	//login or restore
-	if err := login(wac); err != nil {
-		log.Fatalf("error logging in: %v\n", err)
-	}
-
-	wah = wac
-
-	//verifies phone connectivity
-	pong, err := wac.AdminTest()
-
-	if !pong || err != nil {
-		log.Fatalf("error pinging in: %v\n", err)
-	}
-
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-	<-c
-
-	//Disconnect safe
-
-	fmt.Println("Shutting down now.")
-	session, err := wac.Disconnect()
-	if err != nil {
-		log.Fatalf("error disconnecting: %v\n", err)
-	}
-	if err := writeSession(session); err != nil {
-		log.Fatalf("error saving session: %v", err)
-	}
-}
-
-func sendMessage(message string, RJID string) {
-	msg := whatsapp.TextMessage{
-		Info: whatsapp.MessageInfo{
-			RemoteJid: RJID,
-		},
-		Text: message,
-	}
-
-	msgId, err := wah.Send(msg)
+			return keyreadSession
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error sending message: %v", err)
 		os.Exit(1)
@@ -455,4 +370,13 @@ func reqUrl(url string) []byte {
 	}
 
 	return body
+}
+
+
+func printPositive(num float64) string {
+	if math.Signbit(num) {
+		return fmt.Sprintf("%.0f", num)
+	}
+
+	return fmt.Sprintf("+%.0f", num)
 }

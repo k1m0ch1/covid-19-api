@@ -64,7 +64,7 @@ the folder `session` in the container at path `/go/src/github.com/k1m0ch1/covid-
 
 here is the complete parameter
 ```
-docker run -v ~/session:/go/src/github.com/k1m0ch1/covid-19-api/session --restart on-failure --name gobot-covid k1m0ch1/gobot-covid MyPhoneNumber
+docker run -v ~/session:/go/src/github.com/k1m0ch1/covid-19-api/session x--restart on-failure --name gobot-covid k1m0ch1/gobot-covid MyPhoneNumber
 ```
 
 # Endpoint
@@ -207,12 +207,12 @@ gunicorn --config python:src.gunicorn_cfg src.wsgi:app
 - news crawler from reliable resource
 
 ## Bot Whatsapp to do :
-- session is stored into specific volume, so can be used later
-- prevent the whatsapp spam
+- ~~session is stored into specific volume, so can be used later~~
+- ~~prevent the whatsapp spam~~
 - make much more simple way to run this bot for cross platform
-- for command `id` need to add development of the number before and after
+- ~~for command `id` need to add development of the number before and after~~
 - for command `id` add a linear graph better get from https://kawalcovid19.blob.core.windows.net/viz/statistik_harian.html
-- add a new command `jabar` scrape from https://pikobar.jabarprov.go.id/
+- ~~add a new command `jabar` scrape from https://pikobar.jabarprov.go.id/~~
 - add a new command `jkt` scrape from http://corona.jakarta.go.id/
 - add `id info` for much more detail information
 - add `id hotline` for much more detail information
