@@ -18,6 +18,8 @@ sqlalchemy-utils = "*"
 shortuuid = "*"
 psycopg2-binary = "*"
 sqlalchemy = "*"
+flask-limiter = "*"
+beautifulsoup4 = "*"
 
 [requires]
 python_version = "3.7"

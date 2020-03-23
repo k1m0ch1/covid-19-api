@@ -1,7 +1,6 @@
 from flask import Blueprint, jsonify, request
 from src.cache import cache
 import time
-import collections
 from sqlalchemy import or_
 from datetime import datetime, timedelta
 

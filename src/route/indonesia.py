@@ -1,22 +1,32 @@
 import requests
-
+import re
 from flask import Blueprint, jsonify
 from datetime import datetime, timedelta
 from dateutil import parser
 
-from src.route.root import TODAY_STR, TODAY, YESTERDAY_STR
 from src.cache import cache
 from src.db import session
+from src.limit import limiter
 from src.models import Status
+from src.helper import (
+    is_empty, is_bot, is_not_bot,
+    TODAY_STR, TODAY, YESTERDAY_STR,
+    HOTLINE
+)
 
 indonesia = Blueprint('indonesia', __name__)
 JABAR = 'https://coredata.jabarprov.go.id/analytics/covid19/aggregation.json'
+ODI_API = 'https://indonesia-covid-19.mathdro.id/api/provinsi'
+KAWAL_COVID = "https://kawalcovid19.harippe.id/api/summary"
+CONTACT = "https://pikobar.jabarprov.go.id/contact/"
+sLIMITER = 5
 
 
 @indonesia.route('/')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
 def id():
-    req = requests.get("https://kawalcovid19.harippe.id/api/summary")
+    req = requests.get(KAWAL_COVID)
     data = req.json()
     updated = parser.parse(data['metadata']['lastUpdatedAt']) \
         .replace(tzinfo=None)
@@ -58,10 +68,31 @@ def id():
         return jsonify(_id_beauty(data, 0)), 200
 
 
+@indonesia.route('/hotline')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
+def hotline():
+    return jsonify(HOTLINE), 200
+
+
+@indonesia.route('/hotline/<state>')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
+def hot_line(state):
+    results = []
+    for city in HOTLINE:
+        key = city["kota"].lower()
+        if re.search(r"\b%s" % state.lower(), key):
+            results.append(city)
+    return jsonify(results)
+
+
 @indonesia.route('/jabar')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
 def jabar():
-    result = {}
+    result = _default_resp()
+    result['source'] = {"value": "https://pikobar.jabarprov.go.id/"}
 
     response = requests.get(JABAR)
     if not response.status_code == 200:
@@ -80,12 +111,59 @@ def jabar():
     else:
         result = _jabarset_value(today_stat, yeday_stat)
 
-    result['source'] = {"value": "https://pikobar.jabarprov.go.id/"}
-    return jsonify(result), 200
-
     if len(result) == 0:
         jsonify({"message": "Not Found"}), 404
-    return jsonify(result)
+
+    return jsonify(result), 200
+
+
+@indonesia.route('/jakarta')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
+def jakarta():
+    return _odi_api("jakarta")
+
+
+@indonesia.route('/banten')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
+def banten():
+    return _odi_api("banten")
+
+
+@indonesia.route('/bali')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
+def bali():
+    return _odi_api("bali")
+
+
+@indonesia.route('/yogya')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
+def yogya():
+    return _odi_api("yogya")
+
+
+@indonesia.errorhandler(429)
+def ratelimit_handler(e):
+    return jsonify({"message": "Rate Limited"}), 429
+
+
+def _default_resp():
+    return {
+        "tanggal": {"value": ""},
+        "total_sembuh": {"value": 0, "diff": 0},
+        "total_positif_saat_ini": {"value": 0, "diff": 0},
+        "total_meninggal": {"value": 0, "diff": 0},
+        "proses_pemantauan": {"value": 0},
+        "proses_pengawasan": {"value": 0},
+        "selesai_pemantauan": {"value": 0},
+        "selesai_pengawasan": {"value": 0},
+        "total_odp": {"value": 0},
+        "total_pdp": {"value": 0},
+        "source": {"value": ""}
+    }
 
 
 def _search_list(list, key, status_date):
@@ -109,14 +187,14 @@ def _jabarset_value(current, before):
             ["tanggal", "meninggal", "positif",
                 "selesai_pengawasan", "proses_pemantauan"]:
             result[key] = {
-                "value": int(_is_empty(current[key])),
-                "diff": int(_is_empty(current[key])) -
-                int(_is_empty(before[key]))
+                "value": int(is_empty(current[key])),
+                "diff": int(is_empty(current[key])) -
+                int(is_empty(before[key]))
             }
         else:
-            result[key] = {"value": int(_is_empty(current[key]))
+            result[key] = {"value": int(is_empty(current[key]))
                            if not key == "tanggal" else
-                           _is_empty(current[key])}
+                           is_empty(current[key])}
     return result
 
 
@@ -159,5 +237,29 @@ def _id_beauty(source, db):
     }
 
 
-def _is_empty(string):
-    return 0 if string == "" or string is None else string
+def _odi_api(state):
+    result = _default_resp()
+    result['source'] = {"value": "https://indonesia-covid-19.mathdro.id/"}
+
+    req = requests.get(ODI_API)
+    if not req.status_code == 200:
+        jsonify({"message": f"Error when trying to crawl {ODI_API}"}), 404
+    prov = {prov["provinsi"]: prov for prov in req.json()["data"]}
+
+    daerah = {
+        "jakarta": "DKI Jakarta",
+        "banten": "Banten",
+        "bali": "Bali",
+        "yogya": "Daerah Istimewa Yogyakarta"
+    }
+
+    hasil = prov[daerah[state]]
+
+    result["total_sembuh"]["value"] = hasil["kasusPosi"]
+    result["total_positif_saat_ini"]["value"] = hasil["kasusSemb"]
+    result["total_meninggal"]["value"] = hasil["kasusMeni"]
+
+    if len(result) == 0:
+        jsonify({"message": "Not Found"}), 404
+
+    return jsonify(result), 200

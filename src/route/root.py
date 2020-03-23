@@ -7,34 +7,25 @@ import csv
 import requests
 import re
 
-from datetime import datetime, timedelta
-from dateutil import parser
-from src.db import session
-from src.models import Status
+from src.helper import (
+    is_bot, is_not_bot,
+    TODAY_STR, YESTERDAY_STR
+)
+from src.limit import limiter
 
 root = Blueprint('root', __name__)
 
 _ = environ.get
-DATASET = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-%s.csv" # noqa
 DATASET_ALL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/%s.csv" # noqa
 DEFAULT_KEYS = ['Confirmed', 'Deaths', 'Recovered']
-TODAY = datetime.utcnow().date()
 NEWSAPI_KEY = _('NEWSAPI_KEY', "xxxxxxxxxx")
 NEWSAPI_HOST = _('NEWSAPI_HOST', "http://newsapi.org/v2/top-headlines")
-YESTERDAY_STR = {
-    "slash": datetime.strftime(TODAY - timedelta(days=1), "%-m/%d/%y"),
-    "hyphen": datetime.strftime(TODAY - timedelta(days=1), "%m-%d-%Y"),
-    "hyphen-dmy": datetime.strftime(TODAY - timedelta(days=1), "%d-%m-%Y"),
-}
-TODAY_STR = {
-    "slash": TODAY.strftime("%-m/%d/%y"),
-    "hyphen": TODAY.strftime("%m-%d-%Y"),
-    "hyphen-dmy": TODAY.strftime("%d-%m-%Y"),
-}
+sLIMITER = 5
 
 
 @root.route('/')
 @root.route('/summary')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
 def index():
     data = {
@@ -52,21 +43,29 @@ def index():
 
 
 @root.route('/confirmed')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
 def confirmed():
     return jsonify(_get_today(only_keys="confirmed")), 200
 
 
 @root.route('/deaths')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
 def deaths():
     return jsonify(_get_today(only_keys="deaths")), 200
 
 
 @root.route('/recovered')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
 def recovered():
     return jsonify(_get_today(only_keys="recovered")), 200
 
 
 @root.route('/countries')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
 def countries():
     with open('src/countries.json', 'rb') as outfile:
         return jsonify(json.load(outfile)), 200
@@ -74,12 +73,15 @@ def countries():
 
 
 @root.route('/countries/<country_id>')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
 def country(country_id):
     return jsonify(_get_today(country=country_id.upper())), 200
 
 
 @root.route('/news/<countries>')
 @root.route('/news')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
 def news(**kwargs):
     if NEWSAPI_KEY == "xxxxxxxxxx":
