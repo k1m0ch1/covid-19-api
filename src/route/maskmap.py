@@ -11,7 +11,16 @@ from src.cors import cors
 
 maskmap = Blueprint('maskmap', __name__)
 
-@cross_origin()
+
+@maskmap.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add(
+        'Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'POST')
+    return response
+
+
 @maskmap.route('/places', methods=['POST'])
 @cache.cached(timeout=50)
 def queryPlaces():
@@ -30,7 +39,6 @@ def queryPlaces():
         return jsonify([_placeDict(place) for place in places]), 200
 
 
-@cross_origin()
 @maskmap.route('/places')
 @cache.cached(timeout=50)
 def getAllPlaces():
@@ -51,7 +59,6 @@ def getAllPlaces():
         return jsonify([_placeDict(place) for place in places]), 200
 
 
-@cross_origin()
 @maskmap.route('/stories')
 @cache.cached(timeout=50)
 def getAllStories():
@@ -64,7 +71,6 @@ def getAllStories():
         return jsonify([_storyDict(story) for story in stories]), 200
 
 
-@cross_origin()
 @maskmap.route('/story/<story_id>')
 def getStory(story_id):
     story = session.query(Story).get(story_id)
@@ -73,7 +79,6 @@ def getStory(story_id):
     return jsonify(message="Not Found"), 404
 
 
-@cross_origin()
 @maskmap.route('/place/<place_id>')
 def getPlace(place_id):
     place = session.query(Place).get(place_id)
@@ -82,7 +87,6 @@ def getPlace(place_id):
     return jsonify(message="Not Found"), 404
 
 
-@cross_origin()
 @maskmap.route('/user/<user_id>')
 def getUser(user_id):
     user = session.query(User).get(user_id)
@@ -98,7 +102,6 @@ def getUser(user_id):
     return jsonify(message="Not Found"), 404
 
 
-@cross_origin()
 @maskmap.route('/user', methods=['POST'])
 def handleUserCreated():
     body = request.get_json()
@@ -115,7 +118,6 @@ def handleUserCreated():
     return jsonify({'id': new_user.id})
 
 
-@cross_origin()
 @maskmap.route('/place', methods=['POST'])
 def handlePlaceCreated():
     body = request.get_json()
@@ -132,7 +134,6 @@ def handlePlaceCreated():
     return jsonify({'id': new_place.id})
 
 
-@cross_origin()
 @maskmap.route('/stories', methods=['POST'])
 def handleStoriesCreated():
     body = request.get_json()
