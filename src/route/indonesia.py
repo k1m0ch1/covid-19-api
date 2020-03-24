@@ -255,8 +255,8 @@ def _odi_api(state):
 
     hasil = prov[daerah[state]]
 
-    result["total_sembuh"]["value"] = hasil["kasusPosi"]
-    result["total_positif_saat_ini"]["value"] = hasil["kasusSemb"]
+    result["total_sembuh"]["value"] = hasil["kasusSemb"]
+    result["total_positif_saat_ini"]["value"] = hasil["kasusPosi"]
     result["total_meninggal"]["value"] = hasil["kasusMeni"]
 
     if len(result) == 0:
