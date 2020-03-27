@@ -92,7 +92,6 @@ def hot_line(state):
 @cache.cached(timeout=50)
 def jabar():
     result = _default_resp()
-    result['source'] = {"value": "https://pikobar.jabarprov.go.id/"}
 
     response = requests.get(JABAR)
     if not response.status_code == 200:
@@ -114,6 +113,7 @@ def jabar():
     if len(result) == 0:
         jsonify({"message": "Not Found"}), 404
 
+    result['source'] = {"value": "https://pikobar.jabarprov.go.id/"}
     return jsonify(result), 200
 
 
@@ -144,11 +144,13 @@ def bali():
 def yogya():
     return _odi_api("yogya")
 
+
 @indonesia.route('/kalteng')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
 def kalteng():
     return _odi_api("kalteng")
+
 
 @indonesia.route('/kalbar')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
@@ -156,11 +158,13 @@ def kalteng():
 def kalbar():
     return _odi_api("kalbar")
 
+
 @indonesia.route('/kaltim')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
 def kaltim():
     return _odi_api("kaltim")
+
 
 @indonesia.route('/kaltara')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
@@ -168,11 +172,13 @@ def kaltim():
 def kaltara():
     return _odi_api("kaltara")
 
+
 @indonesia.route('/jatim')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
 def jatim():
     return _odi_api("jatim")
+
 
 @indonesia.route('/jateng')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
@@ -180,11 +186,13 @@ def jatim():
 def jateng():
     return _odi_api("jateng")
 
+
 @indonesia.route('/sulteng')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
 def sulteng():
     return _odi_api("sulteng")
+
 
 @indonesia.route('/sulbar')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
@@ -192,35 +200,41 @@ def sulteng():
 def sulbar():
     return _odi_api("sulbar")
 
+
 @indonesia.route('/sulut')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
 def sulut():
     return _odi_api("sulut")
 
+
 @indonesia.route('/sulsel')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
 def sulsel():
     return _odi_api("sulsel")
-    
+
+
 @indonesia.route('/gorontalo')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
 def gorontalo():
     return _odi_api("gorontalo")
-    
+
+
 @indonesia.route('/ntt')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
 def ntt():
     return _odi_api("ntt")
-    
+
+
 @indonesia.route('/ntb')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
 def ntb():
     return _odi_api("ntb")
+
 
 @indonesia.route('/lampung')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
@@ -228,23 +242,27 @@ def ntb():
 def lampung():
     return _odi_api("lampung")
 
+
 @indonesia.route('/riau')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
 def riau():
     return _odi_api("riau")
-    
+
+
 @indonesia.route('/jambi')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
 def jambi():
     return _odi_api("jambi")
-    
+
+
 @indonesia.route('/babel')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
 def babel():
     return _odi_api("babel")
+
 
 @indonesia.route('/bengkulu')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
@@ -252,11 +270,13 @@ def babel():
 def bengkulu():
     return _odi_api("bengkulu")
 
+
 @indonesia.route('/aceh')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
 def aceh():
-    return _odi_api("aceh")    
+    return _odi_api("aceh")
+
 
 @indonesia.route('/sumut')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
@@ -264,17 +284,20 @@ def aceh():
 def sumut():
     return _odi_api("sumut")
 
+
 @indonesia.route('/sumbar')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
 def sumbar():
     return _odi_api("sumbar")
 
+
 @indonesia.route('/sumsel')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
 def sumsel():
-    return _odi_api("sumsel")    
+    return _odi_api("sumsel")
+
 
 @indonesia.route('/maluta')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
@@ -282,17 +305,20 @@ def sumsel():
 def maluta():
     return _odi_api("maluta")
 
+
 @indonesia.route('/maluku')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
 def maluku():
     return _odi_api("maluku")
 
+
 @indonesia.route('/papua')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
 def papua():
     return _odi_api("papua")
+
 
 @indonesia.errorhandler(429)
 def ratelimit_handler(e):
