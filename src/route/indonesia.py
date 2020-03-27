@@ -116,20 +116,11 @@ def jabar():
     result['source'] = {"value": "https://pikobar.jabarprov.go.id/"}
     return jsonify(result), 200
 
-
-@indonesia.route('/jakarta')
+@indonesia.route('/aceh')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
-def jakarta():
-    return _odi_api("jakarta")
-
-
-@indonesia.route('/banten')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def banten():
-    return _odi_api("banten")
-
+def aceh():
+    return _odi_api("aceh")
 
 @indonesia.route('/bali')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
@@ -137,132 +128,11 @@ def banten():
 def bali():
     return _odi_api("bali")
 
-
-@indonesia.route('/yogya')
+@indonesia.route('/banten')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
-def yogya():
-    return _odi_api("yogya")
-
-
-@indonesia.route('/kalteng')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def kalteng():
-    return _odi_api("kalteng")
-
-
-@indonesia.route('/kalbar')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def kalbar():
-    return _odi_api("kalbar")
-
-
-@indonesia.route('/kaltim')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def kaltim():
-    return _odi_api("kaltim")
-
-
-@indonesia.route('/kaltara')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def kaltara():
-    return _odi_api("kaltara")
-
-
-@indonesia.route('/jatim')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def jatim():
-    return _odi_api("jatim")
-
-
-@indonesia.route('/jateng')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def jateng():
-    return _odi_api("jateng")
-
-
-@indonesia.route('/sulteng')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def sulteng():
-    return _odi_api("sulteng")
-
-
-@indonesia.route('/sulbar')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def sulbar():
-    return _odi_api("sulbar")
-
-
-@indonesia.route('/sulut')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def sulut():
-    return _odi_api("sulut")
-
-
-@indonesia.route('/sulsel')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def sulsel():
-    return _odi_api("sulsel")
-
-
-@indonesia.route('/gorontalo')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def gorontalo():
-    return _odi_api("gorontalo")
-
-
-@indonesia.route('/ntt')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def ntt():
-    return _odi_api("ntt")
-
-
-@indonesia.route('/ntb')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def ntb():
-    return _odi_api("ntb")
-
-
-@indonesia.route('/lampung')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def lampung():
-    return _odi_api("lampung")
-
-
-@indonesia.route('/riau')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def riau():
-    return _odi_api("riau")
-
-
-@indonesia.route('/jambi')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def jambi():
-    return _odi_api("jambi")
-
-
-@indonesia.route('/babel')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def babel():
-    return _odi_api("babel")
-
+def banten():
+    return _odi_api("banten")
 
 @indonesia.route('/bengkulu')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
@@ -270,41 +140,83 @@ def babel():
 def bengkulu():
     return _odi_api("bengkulu")
 
-
-@indonesia.route('/aceh')
+@indonesia.route('/gorontalo')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
-def aceh():
-    return _odi_api("aceh")
+def gorontalo():
+    return _odi_api("gorontalo")
 
-
-@indonesia.route('/sumut')
+@indonesia.route('/jakarta')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
-def sumut():
-    return _odi_api("sumut")
+def jakarta():
+    return _odi_api("jakarta")
 
-
-@indonesia.route('/sumbar')
+@indonesia.route('/jambi')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
-def sumbar():
-    return _odi_api("sumbar")
+def jambi():
+    return _odi_api("jambi")
 
-
-@indonesia.route('/sumsel')
+@indonesia.route('/jateng')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
-def sumsel():
-    return _odi_api("sumsel")
+def jateng():
+    return _odi_api("jateng")
 
-
-@indonesia.route('/maluta')
+@indonesia.route('/jatim')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
-def maluta():
-    return _odi_api("maluta")
+def jatim():
+    return _odi_api("jatim")
 
+@indonesia.route('/kalbar')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
+def kalbar():
+    return _odi_api("kalbar")
+
+@indonesia.route('/kalsel')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
+def kalsel():
+    return _odi_api("kalsel")
+
+@indonesia.route('/kalteng')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
+def kalteng():
+    return _odi_api("kalteng")
+
+@indonesia.route('/kaltim')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
+def kaltim():
+    return _odi_api("kaltim")
+
+@indonesia.route('/kaltara')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
+def kaltara():
+    return _odi_api("kaltara")
+
+@indonesia.route('/kep-bangka')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
+def kepbangka():
+    return _odi_api("kep-bangka")
+
+@indonesia.route('/kepri')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
+def kepri():
+    return _odi_api("kepri")
+
+@indonesia.route('/lampung')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
+def lampung():
+    return _odi_api("lampung")
 
 @indonesia.route('/maluku')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
@@ -312,12 +224,95 @@ def maluta():
 def maluku():
     return _odi_api("maluku")
 
+@indonesia.route('/maluku-utara')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
+def maluta():
+    return _odi_api("maluku-utara")
+
+@indonesia.route('/ntb')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
+def ntb():
+    return _odi_api("ntb")
+
+@indonesia.route('/ntt')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
+def ntt():
+    return _odi_api("ntt")
 
 @indonesia.route('/papua')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
 def papua():
     return _odi_api("papua")
+
+@indonesia.route('/papua-barat')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
+def papuabarat():
+    return _odi_api("papua-barat")
+
+@indonesia.route('/riau')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
+def riau():
+    return _odi_api("riau")
+
+@indonesia.route('/sulbar')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
+def sulbar():
+    return _odi_api("sulbar")
+
+@indonesia.route('/sulsel')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
+def sulsel():
+    return _odi_api("sulsel")
+
+@indonesia.route('/sulteng')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
+def sulteng():
+    return _odi_api("sulteng")
+
+@indonesia.route('/sultra')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
+def sultra():
+    return _odi_api("sultra")
+
+@indonesia.route('/sulut')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
+def sulut():
+    return _odi_api("sulut")
+
+@indonesia.route('/sumbar')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
+def sumbar():
+    return _odi_api("sumbar")
+
+@indonesia.route('/sumsel')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
+def sumsel():
+    return _odi_api("sumsel")
+
+@indonesia.route('/sumut')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
+def sumut():
+    return _odi_api("sumut")
+
+@indonesia.route('/yogya')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
+def yogya():
+    return _odi_api("yogya")
 
 
 @indonesia.errorhandler(429)
@@ -422,38 +417,39 @@ def _odi_api(state):
     prov = {prov["provinsi"]: prov for prov in req.json()["data"]}
 
     daerah = {
-        "jakarta": "DKI Jakarta",
-        "banten": "Banten",
+        "aceh": "Aceh",
         "bali": "Bali",
-        "yogya": "Daerah Istimewa Yogyakarta",
-        "kalteng": "Kalimantan Tengah",
-        "jatim": "Jawa Timur",
-        "jateng": "Jawa Tengah",
-        "kaltim": "Kalimantan Timur",
-        "kepri": "Kepulauan Riau",
-        "sulteng": "Sulawesi Tenggara",
-        "kaltara": "Kalimantan Utara",
-        "kalbar": "Kalimantan Barat",
-        "sulteng": "Sulawesi Tengah",
-        "sulbar": "Sulawesi Barat",
-        "sulut": "Sulawesi Utara",
-        "sulsel": "Sulawesi Selatan",
+        "banten": "Banten",
+        "bengkulu": "Bengkulu",
         "gorontalo": "Gorontalo",
+        "jakarta": "DKI Jakarta",
+        "jambi": "Jambi",
+        "jateng": "Jawa Tengah",
+        "jatim": "Jawa Timur",
+        "kalbar": "Kalimantan Barat",
+        "kalsel": "Kalimantan Selatan",
+        "kalteng": "Kalimantan Tengah",
+        "kaltim": "Kalimantan Timur",
+        "kaltara": "Kalimantan Utara",
+        "kep-bangka": "Kepulauan Bangka Belitung",
+        "kepri": "Kepulauan Riau",
+        "lampung": "Lampung",
+        "maluku": "Maluku",
+        "maluku-utara": "Maluku Utara",
         "ntb": "Nusa Tenggara Barat",
         "ntt": "Nusa Tenggara Timur",
-        "lampung": "Lampung",
-        "babel": "Kepulauan Bangka Belitung",
-        "bengkulu": "Bengkulu",
-        "aceh": "Aceh",
-        "sumut": "Sumatera Utara",
+        "papua": "Papua",
+        "papua-barat": "Papua Barat",
+        "riau": "Riau",
+        "sulbar": "Sulawesi Barat",
+        "sulsel": "Sulawesi Selatan",
+        "sulteng": "Sulawesi Tengah",
+        "sultra": "Sulawesi Tenggara",
+        "sulut": "Sulawesi Utara",
         "sumbar": "Sumatera Barat",
         "sumsel": "Sumatera Selatan",
-        "riau": "Riau",
-        "jambi": "Jambi",
-        "maluku": "Maluku",
-        "maluta": "Maluku Utara",
-        "papua": "Papua"
-
+        "sumut": "Sumatera Utara",
+        "yogya": "Daerah Istimewa Yogyakarta"
     }
 
     hasil = prov[daerah[state]]
