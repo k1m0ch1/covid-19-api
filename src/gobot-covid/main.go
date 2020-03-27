@@ -319,6 +319,7 @@ func countries(code string) string {
 func main() {
 	//create new WhatsApp connection
 	wac, err := whatsapp.NewConn(5 * time.Second)
+	wac.SetClientVersion(0, 4, 2080)
 	if err != nil {
 		log.Fatalf("error creating connection: %v\n", err)
 	}
