@@ -31,8 +31,10 @@ var url = "https://covid19-api.yggdrasil.id%s"
 
 
 func parseNews(endpoint string) string {
-	body, err:= reqUrl(fmt.Sprintf(url + "%s", "/news", endpoint))
+	link := fmt.Sprintf(url + "%s", "/news", endpoint)
+	body, err:= reqUrl(link)
 	if err >= 400 {
+		log.Printf("Error, %d when access %s ", err, link)
 		return "timeout"
 	}
 
@@ -40,7 +42,7 @@ func parseNews(endpoint string) string {
 
 	jsonErr := json.Unmarshal(body, &result)
 	if jsonErr != nil {
-		log.Fatal("Break point 4 %s %s", jsonErr, result)
+		log.Fatalf("Break point 4 %s %s", jsonErr, result)
 	}
 
 	reply := "Top Headlines\n\n"
@@ -52,8 +54,10 @@ func parseNews(endpoint string) string {
 }
 
 func parsedataCountries(country_id string) string {
-	body, err := reqUrl(fmt.Sprintf(url + "%s", "/countries", country_id))
+	link := fmt.Sprintf(url + "%s", "/countries/", country_id)
+	body, err := reqUrl(link)
 	if err >= 400 {
+		log.Printf("Error, %d when access %s ", err, link)
 		return "timeout"
 	}
 
@@ -77,8 +81,10 @@ func parsedataCountries(country_id string) string {
 }
 
 func parseHotline(search string) string {
-	body, err := reqUrl(fmt.Sprintf(url + "%s", "/id/hotline/", search))
+	link := fmt.Sprintf(url + "%s", "/id/hotline/", search)
+	body, err := reqUrl(link)
 	if err >= 400 {
+		log.Printf("Error, %d when access %s ", err, link)
 		return "timeout"
 	}
 
@@ -111,8 +117,10 @@ func parseHotline(search string) string {
 }
 
 func parsedata() string {
-	body, err := reqUrl(fmt.Sprintf(url, "/"))
+	link := fmt.Sprintf(url, "/")
+	body, err := reqUrl(link)
 	if err >= 400 {
+		log.Printf("Error, %d when access %s ", err, link)
 		return "timeout"
 	}
 
@@ -129,8 +137,10 @@ func parsedata() string {
 }
 
 func parsedataID() string {
-	body, err := reqUrl(fmt.Sprintf(url, "/id/"))
+	link := fmt.Sprintf(url, "/id/")
+	body, err := reqUrl(link)
 	if err >= 400 {
+		log.Printf("Error, %d when access %s ", err, link)
 		return "timeout"
 	}
 
@@ -160,6 +170,7 @@ func parsedataID() string {
 func parseDataIDProvince(state string) string {
 	body, err := reqUrl(fmt.Sprintf(url + "%s", "/id/", state))
 	if err >= 400 {
+		log.Printf("Error, %d", err)
 		return "timeout"
 	}
 
@@ -285,6 +296,7 @@ func (wh *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
 func countries(code string) string {
 	body, err:= reqUrl(fmt.Sprintf(url, "/countries"))
 	if err >= 400 {
+		log.Printf("Error, %d", err)
 		return "timeout"
 	}
 
@@ -370,7 +382,6 @@ func login(wac *whatsapp.Conn) error {
 		if err != nil {
 			return fmt.Errorf("restoring failed: %v\n", err)
 		}
-		log.Println(session.Wid)
 	} else {
 		//no saved session -> regular login
 		qr := make(chan string)
@@ -466,7 +477,7 @@ func reqUrl(url string) ([]byte, int) {
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		log.Fatal("Break point 1 %s", err)
+		log.Fatalf("Break point 1 %s", err)
 	}
 
 	req.Header.Set("User-Agent", "gobot-covid19/2.0")
@@ -483,7 +494,7 @@ func reqUrl(url string) ([]byte, int) {
 
 	body, readErr := ioutil.ReadAll(res.Body)
 	if readErr != nil {
-		log.Fatal("Break point 3 %s", readErr)
+		log.Fatalf("Break point 3 %s", readErr)
 	}
 
 	return body, 200
@@ -496,3 +507,4 @@ func printPositive(num float64) string {
 	}
 	return fmt.Sprintf("+%.0f", num)
 }
+
