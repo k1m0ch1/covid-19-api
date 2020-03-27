@@ -112,10 +112,11 @@ def all_data():
 def _get_today(**kwargs):
     get_data = _extract_handler(DATASET_ALL % TODAY_STR['hyphen'])
     if not get_data:
+        print("goes here")
         get_data = _extract_handler(DATASET_ALL % YESTERDAY_STR['hyphen'])
 
-    result = [{f"{re.sub('[/ ]', '', key)[0].lower()}"
-               f"{re.sub('[/ ]', '', key)[1:]}":
+    result = [{f"{re.sub('[_]', '', key)[0].lower()}"
+               f"{re.sub('[_]', '', key)[1:]}":
                int(item[key]) if key in DEFAULT_KEYS else
                None if item[key] == "" else item[key] for key in item}
               for item in get_data]
@@ -131,8 +132,8 @@ def _get_today(**kwargs):
                     continue
                 result.append({})
 
-                curr_key = f"{re.sub('[/ ]', '', key)[0].lower()}" \
-                    f"{re.sub('[/ ]', '', key)[1:]}"
+                curr_key = f"{re.sub('[_]', '', key)[0].lower()}" \
+                    f"{re.sub('[_]', '', key)[1:]}"
 
                 result[curr_index][curr_key] = \
                     int(item[key]) if key in DEFAULT_KEYS else \
@@ -151,11 +152,11 @@ def _get_today(**kwargs):
                 key_country = country
                 break
         for item in get_data:
-            if item["Country/Region"] == key_country:
+            if item["Country_Region"] == key_country:
                 result.append({})
                 for key in item:
-                    curr_key = f"{re.sub('[/ ]', '', key)[0].lower()}" \
-                        f"{re.sub('[/ ]', '', key)[1:]}"
+                    curr_key = f"{re.sub('[_]', '', key)[0].lower()}" \
+                        f"{re.sub('[_]', '', key)[1:]}"
 
                     result[-1][curr_key] = \
                         int(item[key]) if key in DEFAULT_KEYS else \
