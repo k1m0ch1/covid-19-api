@@ -62,11 +62,11 @@ def deaths():
 def recovered():
     return jsonify(_get_today(only_keys="recovered")), 200
 
-@root.route('/provinsi')
+@root.route('/provinces')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
-def provinsi():
-    with open('src/provinsi.json', 'rb') as outfile:
+def provinces():
+    with open('src/provinces.json', 'rb') as outfile:
         return jsonify(json.load(outfile)), 200
     return jsonify({"message": "Error Occured"}), 500
 
