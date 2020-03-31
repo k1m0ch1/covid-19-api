@@ -21,6 +21,7 @@ sqlalchemy = "*"
 flask-limiter = "*"
 beautifulsoup4 = "*"
 flask-cors = "*"
+selenium = "*"
 
 [requires]
 python_version = "3.7"

@@ -1,5 +1,4 @@
 import requests
-import re
 from flask import Blueprint, jsonify
 from datetime import datetime, timedelta
 from dateutil import parser
@@ -11,8 +10,9 @@ from src.models import Status
 from src.helper import (
     is_empty, is_bot, is_not_bot,
     TODAY_STR, TODAY, YESTERDAY_STR,
-    HOTLINE
+    DAERAH
 )
+from src import bot
 
 indonesia = Blueprint('indonesia', __name__)
 JABAR = 'https://coredata.jabarprov.go.id/analytics/covid19/aggregation.json'
@@ -30,7 +30,9 @@ def id():
     data = req.json()
     updated = parser.parse(data['metadata']['lastUpdatedAt']) \
         .replace(tzinfo=None)
-    alldata = session.query(Status).order_by(Status.id.desc()).all()
+    alldata = session.query(Status) \
+        .filter(Status.country_id == "id") \
+        .order_by(Status.created.desc()).all()
     dbDate = ""
     if len(alldata) > 0:
         getData = [_id_beauty(data, row) for row in alldata]
@@ -52,8 +54,8 @@ def id():
                not row['deaths']['diff'] == 0 and \
                not row['recovered']['diff'] == 0 and \
                not row['active_care']['diff'] == 0:
-                return jsonify(row), 200
-        return jsonify(getData[0]), 200
+                return _response(row, 200)
+        return _response(getData[0], 200)
     else:
         new_status = Status(
             confirmed=data['confirmed']['value'],
@@ -65,26 +67,7 @@ def id():
             updated=updated
         )
         session.add(new_status)
-        return jsonify(_id_beauty(data, 0)), 200
-
-
-@indonesia.route('/hotline')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def hotline():
-    return jsonify(HOTLINE), 200
-
-
-@indonesia.route('/hotline/<state>')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def hot_line(state):
-    results = []
-    for city in HOTLINE:
-        key = city["kota"].lower()
-        if re.search(r"\b%s" % state.lower(), key):
-            results.append(city)
-    return jsonify(results)
+        return _response(_id_beauty(data, 0), 200)
 
 
 @indonesia.route('/jabar')
@@ -116,203 +99,20 @@ def jabar():
     result['source'] = {"value": "https://pikobar.jabarprov.go.id/"}
     return jsonify(result), 200
 
-@indonesia.route('/aceh')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def aceh():
-    return _odi_api("aceh")
 
-@indonesia.route('/bali')
+@indonesia.route('/<province>')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
-def bali():
-    return _odi_api("bali")
-
-@indonesia.route('/banten')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def banten():
-    return _odi_api("banten")
-
-@indonesia.route('/bengkulu')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def bengkulu():
-    return _odi_api("bengkulu")
-
-@indonesia.route('/gorontalo')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def gorontalo():
-    return _odi_api("gorontalo")
-
-@indonesia.route('/jakarta')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def jakarta():
-    return _odi_api("jakarta")
-
-@indonesia.route('/jambi')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def jambi():
-    return _odi_api("jambi")
-
-@indonesia.route('/jateng')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def jateng():
-    return _odi_api("jateng")
-
-@indonesia.route('/jatim')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def jatim():
-    return _odi_api("jatim")
-
-@indonesia.route('/kalbar')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def kalbar():
-    return _odi_api("kalbar")
-
-@indonesia.route('/kalsel')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def kalsel():
-    return _odi_api("kalsel")
-
-@indonesia.route('/kalteng')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def kalteng():
-    return _odi_api("kalteng")
-
-@indonesia.route('/kaltim')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def kaltim():
-    return _odi_api("kaltim")
-
-@indonesia.route('/kaltara')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def kaltara():
-    return _odi_api("kaltara")
-
-@indonesia.route('/kep-bangka')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def kepbangka():
-    return _odi_api("kep-bangka")
-
-@indonesia.route('/kepri')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def kepri():
-    return _odi_api("kepri")
-
-@indonesia.route('/lampung')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def lampung():
-    return _odi_api("lampung")
-
-@indonesia.route('/maluku')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def maluku():
-    return _odi_api("maluku")
-
-@indonesia.route('/maluku-utara')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def maluta():
-    return _odi_api("maluku-utara")
-
-@indonesia.route('/ntb')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def ntb():
-    return _odi_api("ntb")
-
-@indonesia.route('/ntt')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def ntt():
-    return _odi_api("ntt")
-
-@indonesia.route('/papua')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def papua():
-    return _odi_api("papua")
-
-@indonesia.route('/papua-barat')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def papuabarat():
-    return _odi_api("papua-barat")
-
-@indonesia.route('/riau')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def riau():
-    return _odi_api("riau")
-
-@indonesia.route('/sulbar')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def sulbar():
-    return _odi_api("sulbar")
-
-@indonesia.route('/sulsel')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def sulsel():
-    return _odi_api("sulsel")
-
-@indonesia.route('/sulteng')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def sulteng():
-    return _odi_api("sulteng")
-
-@indonesia.route('/sultra')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def sultra():
-    return _odi_api("sultra")
-
-@indonesia.route('/sulut')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def sulut():
-    return _odi_api("sulut")
-
-@indonesia.route('/sumbar')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def sumbar():
-    return _odi_api("sumbar")
-
-@indonesia.route('/sumsel')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def sumsel():
-    return _odi_api("sumsel")
-
-@indonesia.route('/sumut')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def sumut():
-    return _odi_api("sumut")
-
-@indonesia.route('/yogya')
-@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
-@cache.cached(timeout=50)
-def yogya():
-    return _odi_api("yogya")
+def province(province):
+    if province in DAERAH:
+        return _odi_api(province)
+    if province == "list":
+        provinsi = [item for item in DAERAH]
+        if True:
+            return jsonify(message=bot.province_list(provinsi)), 200
+        else:
+            return jsonify([item for item in DAERAH]), 200
+    return jsonify(message="Not Found"), 404
 
 
 @indonesia.errorhandler(429)
@@ -324,7 +124,7 @@ def _default_resp():
     return {
         "tanggal": {"value": ""},
         "total_sembuh": {"value": 0, "diff": 0},
-        "total_positif_saat_ini": {"value": 0, "diff": 0},
+        "total_positif": {"value": 0, "diff": 0},
         "total_meninggal": {"value": 0, "diff": 0},
         "proses_pemantauan": {"value": 0},
         "proses_pengawasan": {"value": 0},
@@ -369,20 +169,18 @@ def _jabarset_value(current, before):
 
 
 def _id_beauty(source, db):
-
+    updated = parser.parse(source['metadata']['lastUpdatedAt']) \
+            .replace(tzinfo=None)
     if db == 0:
         confirmed = 0
         deaths = 0
         recovered = 0
         active_care = 0
-        updated = parser.parse(source['metadata']['lastUpdatedAt']) \
-            .replace(tzinfo=None)
     else:
         confirmed = db.confirmed
         deaths = db.deaths
         recovered = db.recovered
         active_care = db.active_care
-        updated = db.updated
     return {
         "confirmed": {
             "value": source['confirmed']['value'],
@@ -408,57 +206,73 @@ def _id_beauty(source, db):
 
 
 def _odi_api(state):
-    result = _default_resp()
-    result['source'] = {"value": "https://indonesia-covid-19.mathdro.id/"}
-
     req = requests.get(ODI_API)
     if not req.status_code == 200:
         jsonify({"message": f"Error when trying to crawl {ODI_API}"}), 404
     prov = {prov["provinsi"]: prov for prov in req.json()["data"]}
+    hasil = prov[DAERAH[state]]
+    todayIsNone = True
 
-    daerah = {
-        "aceh": "Aceh",
-        "bali": "Bali",
-        "banten": "Banten",
-        "bengkulu": "Bengkulu",
-        "gorontalo": "Gorontalo",
-        "jakarta": "DKI Jakarta",
-        "jambi": "Jambi",
-        "jateng": "Jawa Tengah",
-        "jatim": "Jawa Timur",
-        "kalbar": "Kalimantan Barat",
-        "kalsel": "Kalimantan Selatan",
-        "kalteng": "Kalimantan Tengah",
-        "kaltim": "Kalimantan Timur",
-        "kaltara": "Kalimantan Utara",
-        "kep-bangka": "Kepulauan Bangka Belitung",
-        "kepri": "Kepulauan Riau",
-        "lampung": "Lampung",
-        "maluku": "Maluku",
-        "maluku-utara": "Maluku Utara",
-        "ntb": "Nusa Tenggara Barat",
-        "ntt": "Nusa Tenggara Timur",
-        "papua": "Papua",
-        "papua-barat": "Papua Barat",
-        "riau": "Riau",
-        "sulbar": "Sulawesi Barat",
-        "sulsel": "Sulawesi Selatan",
-        "sulteng": "Sulawesi Tengah",
-        "sultra": "Sulawesi Tenggara",
-        "sulut": "Sulawesi Utara",
-        "sumbar": "Sumatera Barat",
-        "sumsel": "Sumatera Selatan",
-        "sumut": "Sumatera Utara",
-        "yogya": "Daerah Istimewa Yogyakarta"
+    result = _default_resp()
+    result['metadata'] = {
+        "source": "https://indonesia-covid-19.mathdro.id/",
+        "province": DAERAH[state].upper()
     }
 
-    hasil = prov[daerah[state]]
+    get_state = session.query(Status) \
+        .filter(Status.country_id == f"id.{state}") \
+        .order_by(Status.created.desc()) \
+        .all()
+
+    if len(get_state) > 0:
+        for row in get_state:
+            if not row.created.date() == datetime.utcnow().date():
+                result["total_sembuh"]["diff"] = \
+                    hasil["kasusSemb"] - row.recovered
+                result["total_positif"]["diff"] = \
+                    hasil["kasusPosi"] - row.confirmed
+                result["total_meninggal"]["diff"] = \
+                    hasil["kasusMeni"] - row.deaths
+                result["metadata"]["diff_date"] = \
+                    row.created.isoformat()
+                result["metadata"]["source_date"] = \
+                    datetime.utcnow().isoformat()
+                break
+            else:
+                todayIsNone = False
+                result["metadata"]["source_date"] = \
+                    row.created.isoformat()
+
+    if todayIsNone:
+        new_status = Status(
+            confirmed=hasil["kasusPosi"],
+            deaths=hasil["kasusMeni"],
+            recovered=hasil["kasusSemb"],
+            active_care=0,
+            country_id=f"id.{state}",
+            created=datetime.utcnow(),
+            updated=datetime.utcnow()
+        )
+        session.add(new_status)
+        result["metadata"]["source_date"] = \
+            datetime.utcnow().isoformat()
 
     result["total_sembuh"]["value"] = hasil["kasusSemb"]
-    result["total_positif_saat_ini"]["value"] = hasil["kasusPosi"]
+    result["total_positif"]["value"] = hasil["kasusPosi"]
     result["total_meninggal"]["value"] = hasil["kasusMeni"]
 
     if len(result) == 0:
         jsonify({"message": "Not Found"}), 404
 
-    return jsonify(result), 200
+    if is_bot():
+        return jsonify(message=bot.province(result)), 200
+    else:
+        return jsonify(result), 200
+
+
+def _response(data, responseCode):
+    if is_bot():
+        return jsonify(message=bot.id(data)), responseCode
+    else:
+        return jsonify(data), responseCode
+

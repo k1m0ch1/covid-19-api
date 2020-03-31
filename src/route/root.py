@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify
 from src.cache import cache
-from os import environ
+from datetime import datetime, timedelta
+from dateutil import parser
 
 import json
 import csv
@@ -9,22 +10,24 @@ import re
 
 from src.helper import (
     is_bot, is_not_bot,
-    TODAY_STR, YESTERDAY_STR
+    TODAY_STR, YESTERDAY_STR, TODAY,
+    HOTLINE
+)
+
+from src.config import (
+    sLIMITER, DATASET_ALL,
+    NEWSAPI_HOST, NEWSAPI_KEY
 )
 from src.limit import limiter
+from src import bot
 
 root = Blueprint('root', __name__)
 
-_ = environ.get
-DATASET_ALL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/%s.csv" # noqa
 DEFAULT_KEYS = ['Confirmed', 'Deaths', 'Recovered']
-NEWSAPI_KEY = _('NEWSAPI_KEY', "xxxxxxxxxx")
-NEWSAPI_HOST = _('NEWSAPI_HOST', "http://newsapi.org/v2/top-headlines")
-sLIMITER = 5
 
 
 @root.route('/')
-@root.route('/summary')
+@root.route('/status')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
 def index():
@@ -39,50 +42,76 @@ def index():
         data['deaths'] += int(item['deaths'])
         data['recovered'] += int(item['recovered'])
 
+    if is_bot():
+        return jsonify(message=bot.summary(data)), 200
     return jsonify(data), 200
 
 
-@root.route('/confirmed')
+@root.route('/hotline')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
-def confirmed():
-    return jsonify(_get_today(only_keys="confirmed")), 200
+def hotline():
+    if is_bot():
+        return jsonify(message=bot.hotline(HOTLINE)), 200
+    return jsonify(HOTLINE), 200
 
 
-@root.route('/deaths')
+@root.route('/hotline/<state>')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
-def deaths():
-    return jsonify(_get_today(only_keys="deaths")), 200
+def hot_line(state):
+    results = []
+    for city in HOTLINE:
+        key = city["kota"].lower()
+        if re.search(r"\b%s" % state.lower(), key):
+            results.append(city)
+    if is_bot():
+        return jsonify(message=bot.hotline(results)), 200
+    return jsonify(results)
 
 
-@root.route('/recovered')
+@root.route('/<status>')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
-def recovered():
-    return jsonify(_get_today(only_keys="recovered")), 200
+def stat(status):
+    if is_bot():
+        return jsonify(message="Not Found"), 404
+    if status in ['confirmed', 'deaths', 'recovered']:
+        return jsonify(_get_today(only_keys=status)), 200
+    return jsonify(message="Not Found"), 404
+
 
 @root.route('/provinces')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
 def provinces():
+    if is_bot():
+        return jsonify(message="Not Found"), 404
     with open('src/provinces.json', 'rb') as outfile:
         return jsonify(json.load(outfile)), 200
     return jsonify({"message": "Error Occured"}), 500
+
 
 @root.route('/countries')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
 def countries():
+    if is_bot():
+        return jsonify(message="Not Found"), 404
     with open('src/countries.json', 'rb') as outfile:
         return jsonify(json.load(outfile)), 200
     return jsonify({"message": "Error Occured"}), 500
 
 
+@root.route('/status/<country_id>')
 @root.route('/countries/<country_id>')
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
 def country(country_id):
+    if is_bot():
+        return jsonify(
+            message=bot.countries(
+                _get_today(country=country_id.upper(), mode="diff"))), 200
     return jsonify(_get_today(country=country_id.upper())), 200
 
 
@@ -107,6 +136,8 @@ def news(**kwargs):
         return jsonify({"message": "Error occured while "
                         "trying to get the news"}), req.status_code
 
+    if is_bot():
+        return jsonify(message=bot.news(req.json()['articles'])), 200
     return jsonify(req.json()['articles']), 200
 
 
@@ -117,10 +148,14 @@ def all_data():
 
 
 def _get_today(**kwargs):
+    now_data = TODAY_STR['hyphen']
+    prev_data = YESTERDAY_STR['hyphen']
     get_data = _extract_handler(DATASET_ALL % TODAY_STR['hyphen'])
+
     if not get_data:
-        print("goes here")
-        get_data = _extract_handler(DATASET_ALL % YESTERDAY_STR['hyphen'])
+        now_data = YESTERDAY_STR['hyphen']
+        prev_data = datetime.strftime(TODAY - timedelta(days=2), "%m-%d-%Y")
+        get_data = _extract_handler(DATASET_ALL % now_data)
 
     result = [{f"{re.sub('[_]', '', key)[0].lower()}"
                f"{re.sub('[_]', '', key)[1:]}":
@@ -148,26 +183,17 @@ def _get_today(**kwargs):
             curr_index += 1
 
     if "country" in kwargs:
-        countries = None
-        key_country = ""
-        result = []
-        with open('src/countries.json', 'rb') as outfile:
-            countries = json.load(outfile)
+        result = _country(kwargs['country'], get_data)
 
-        for country in countries["countries"]:
-            if countries["countries"][country] == kwargs['country']:
-                key_country = country
-                break
-        for item in get_data:
-            if item["Country_Region"] == key_country:
-                result.append({})
-                for key in item:
-                    curr_key = f"{re.sub('[_]', '', key)[0].lower()}" \
-                        f"{re.sub('[_]', '', key)[1:]}"
-
-                    result[-1][curr_key] = \
-                        int(item[key]) if key in DEFAULT_KEYS else \
-                        None if item[key] == "" else item[key]
+    if "mode" in kwargs:
+        if kwargs['mode'] == "diff":
+            result = {
+                "origin": result,
+                "diff": "",
+                "last_updated": parser.parse(now_data).isoformat()
+            }
+            get_prev_data = _extract_handler(DATASET_ALL % prev_data)
+            result['diff'] = _country(kwargs['country'], get_prev_data)
 
     return result
 
@@ -179,3 +205,28 @@ def _extract_handler(url):
         return False
 
     return [item for item in csv.DictReader(request.text.splitlines())]
+
+
+def _country(negara, data):
+    countries = None
+    key_country = ""
+    result = []
+    with open('src/countries.json', 'rb') as outfile:
+        countries = json.load(outfile)
+
+    for country in countries["countries"]:
+        if countries["countries"][country] == negara:
+            key_country = country
+            break
+    for item in data:
+        if item["Country_Region"] == key_country:
+            result.append({})
+            for key in item:
+                curr_key = f"{re.sub('[_]', '', key)[0].lower()}" \
+                    f"{re.sub('[_]', '', key)[1:]}"
+
+                result[-1][curr_key] = \
+                    int(item[key]) if key in DEFAULT_KEYS else \
+                    None if item[key] == "" else item[key]
+
+    return result

@@ -6,10 +6,16 @@ from datetime import datetime, timedelta
 
 from src.db import session
 from src.models import User, Place, Story
-from src.cors import cors
+from src.helper import is_bot
 
 
 maskmap = Blueprint('maskmap', __name__)
+
+
+@maskmap.before_request
+def before_request(request):
+    if is_bot():
+        return jsonify(message="Not Found"), 404
 
 
 @maskmap.after_request

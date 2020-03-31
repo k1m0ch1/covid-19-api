@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 from flask import request
-import re
 
 
 TODAY = datetime.utcnow().date()
@@ -23,12 +22,57 @@ def is_empty(string):
 
 
 def is_bot():
-    return request.headers.get('User-Agent') == 'Go-http-client/1.1' or \
-        request.headers.get('User-Agent') == 'gobot-covid19/2.0'
+    return request.headers.get('User-Agent') == 'gobot-covid19/3.0'
 
 
 def is_not_bot():
     return not request.headers.get('User-Agent') == 'gobot-covid19/2.0'
+
+
+def gen(number):
+    return f"{int(number):,}".replace(",", ".")
+
+
+DAERAH = {
+        "aceh": "Aceh",
+        "bali": "Bali",
+        "banten": "Banten",
+        "bengkulu": "Bengkulu",
+        "gorontalo": "Gorontalo",
+        "jakarta": "DKI Jakarta",
+        "jambi": "Jambi",
+        "jateng": "Jawa Tengah",
+        "jatim": "Jawa Timur",
+        "kalbar": "Kalimantan Barat",
+        "kalsel": "Kalimantan Selatan",
+        "kalteng": "Kalimantan Tengah",
+        "kaltim": "Kalimantan Timur",
+        "kaltara": "Kalimantan Utara",
+        "kep-bangka": "Kepulauan Bangka Belitung",
+        "kepri": "Kepulauan Riau",
+        "lampung": "Lampung",
+        "maluku": "Maluku",
+        "maluku-utara": "Maluku Utara",
+        "kalbar": "Kalimantan Barat",
+        "sulbar": "Sulawesi Barat",
+        "sulut": "Sulawesi Utara",
+        "sulsel": "Sulawesi Selatan",
+        "gorontalo": "Gorontalo",
+        "ntb": "Nusa Tenggara Barat",
+        "ntt": "Nusa Tenggara Timur",
+        "papua": "Papua",
+        "papua-barat": "Papua Barat",
+        "riau": "Riau",
+        "sulbar": "Sulawesi Barat",
+        "sulsel": "Sulawesi Selatan",
+        "sulteng": "Sulawesi Tengah",
+        "sultra": "Sulawesi Tenggara",
+        "sulut": "Sulawesi Utara",
+        "sumbar": "Sumatera Barat",
+        "sumsel": "Sumatera Selatan",
+        "sumut": "Sumatera Utara",
+        "yogya": "Daerah Istimewa Yogyakarta"
+    }
 
 
 HOTLINE = [

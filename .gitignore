@@ -10,3 +10,5 @@
 
 /src/gobot-covid/BUILD
 /src/gobot-covid/BUILD/*
+
+chromedriver

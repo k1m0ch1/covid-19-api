@@ -30,6 +30,7 @@ type waHandler struct {
 var url = "https://covid19-api.yggdrasil.id%s"
 
 
+
 func parseNews(endpoint string) string {
 	link := fmt.Sprintf(url + "%s", "/news", endpoint)
 	body, err:= reqUrl(link)

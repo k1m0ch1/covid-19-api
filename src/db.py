@@ -4,6 +4,8 @@ from flask import g, _app_ctx_stack
 from src.models import Base
 from os import environ
 
+from src import config
+
 _ = environ.get
 
 session = scoped_session(
@@ -11,16 +13,13 @@ session = scoped_session(
     scopefunc=_app_ctx_stack.__ident_func__,
 )
 
-DBSTRING = _('DBSTRING',
-             'postgresql://untitled-web:untitled-web@localhost/covid19api')
-
 
 def init_app(app):
     app.before_request(_before_request)
     app.after_request(_after_request)
     app.teardown_appcontext(_teardown_appcontext)
 
-    engine = create_engine(DBSTRING, echo=app.debug)
+    engine = create_engine(config.DBSTRING, echo=app.debug)
     session.configure(bind=engine)
 
     Base.query = session.query_property()
