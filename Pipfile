@@ -22,6 +22,7 @@ flask-limiter = "*"
 beautifulsoup4 = "*"
 flask-cors = "*"
 selenium = "*"
+wand = "*"
 
 [requires]
 python_version = "3.7"

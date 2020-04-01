@@ -12,3 +12,5 @@ NEWSAPI_KEY = _('NEWSAPI_KEY', "xxxxxxxxxx")
 
 NEWSAPI_HOST = _('NEWSAPI_HOST', "http://newsapi.org/v2/top-headlines")
 sLIMITER = 5
+
+CHROMEDRIVER = _('CHROMEDRIVER', "./chromedriver")

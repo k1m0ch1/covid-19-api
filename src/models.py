@@ -81,3 +81,14 @@ class Status(Base):
     created = ServerTimestamp(False)
     updated = ServerTimestamp(True)
 
+
+class Attachment(Base):
+    __tablename__ = 'attachment'
+
+    id = Column(String(22), primary_key=True, default=shortuuid.uuid)
+    key = Column(String(70), nullable=True)
+    name = Column(String(50), nullable=True)
+    description = Column(Text, nullable=True)
+    attachment = Column(Text, nullable=False)
+    created = ServerTimestamp(False)
+    updated = ServerTimestamp(True)

@@ -1,25 +1,98 @@
 import requests
-from flask import Blueprint, jsonify
+import math
+from base64 import b64decode, b64encode
+from wand.image import Image
+from flask import Blueprint, jsonify, Response, url_for
 from datetime import datetime, timedelta
 from dateutil import parser
+
+import time
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.action_chains import ActionChains
 
 from src.cache import cache
 from src.db import session
 from src.limit import limiter
-from src.models import Status
+from src.models import Status, Attachment
 from src.helper import (
     is_empty, is_bot, is_not_bot,
     TODAY_STR, TODAY, YESTERDAY_STR,
     DAERAH
 )
 from src import bot
+from src import config
 
 indonesia = Blueprint('indonesia', __name__)
 JABAR = 'https://coredata.jabarprov.go.id/analytics/covid19/aggregation.json'
 ODI_API = 'https://indonesia-covid-19.mathdro.id/api/provinsi'
 KAWAL_COVID = "https://kawalcovid19.harippe.id/api/summary"
+STATISTIK_URL = 'https://kawalcovid19.blob.core.windows.net/viz/statistik_harian.html' # noqa
 CONTACT = "https://pikobar.jabarprov.go.id/contact/"
-sLIMITER = 5
+DATASET_CONFIRMED = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv" # noqa
+DATASET_RECOVERED = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv" # noqa
+DATASET_DEATHS = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv" # noqa
+sLIMITER = config.sLIMITER
+
+
+@indonesia.route('/graph')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
+def graph():
+    get_latest = session.query(Attachment) \
+        .filter(Attachment.key == "graph.harian") \
+        .order_by(Attachment.created.desc()) \
+        .first()
+    scr_png = b64decode(get_latest.attachment)
+    scr_img = Image(blob=scr_png)
+    return Response(scr_img.make_blob(), mimetype='image/jpeg')
+
+
+@indonesia.route('/seed')
+@limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
+@cache.cached(timeout=50)
+def seed():
+    # seed the statistic graph
+    options = webdriver.ChromeOptions()
+    options.headless = True
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--disable-software-rasterizer")
+    options.add_argument("--disable-dev-shm-usage")
+    driver = webdriver.Chrome(config.CHROMEDRIVER, options=options)
+    driver.get(STATISTIK_URL)
+    time.sleep(15)
+    driver.set_window_size(1600, 1200)
+    image = driver.find_element_by_tag_name('body')
+    ActionChains(driver).move_to_element(image).perform()
+    src_base64 = driver.get_screenshot_as_base64()
+    scr_png = b64decode(src_base64)
+    scr_img = Image(blob=scr_png)
+
+    x = image.location["x"]
+    y = image.location["y"] + 510
+    w = image.size["width"] - 720
+    h = image.size["height"] - 757
+    scr_img.crop(
+        left=math.floor(x),
+        top=math.floor(y),
+        width=math.ceil(w),
+        height=math.ceil(h),
+    )
+
+    encoded_data = b64encode(scr_img.make_blob()).decode("utf-8")
+
+    save_attachment = Attachment(
+        key="graph.harian",
+        attachment=encoded_data
+    )
+
+    session.add(save_attachment)
+
+    # seed the province
+    for province in DAERAH:
+       nothing = _odi_api(province) # noqa
+    return jsonify(message="Seed done"), 200
 
 
 @indonesia.route('/')
@@ -49,11 +122,13 @@ def id():
                 updated=updated
             )
             session.add(new_status)
-        for row in getData:
+        for index, row in enumerate(getData):
             if not row['confirmed']['diff'] == 0 and \
                not row['deaths']['diff'] == 0 and \
                not row['recovered']['diff'] == 0 and \
                not row['active_care']['diff'] == 0:
+                row['metadata']['last_updated'] = \
+                    getData[index-1]['metadata']['last_updated']
                 return _response(row, 200)
         return _response(getData[0], 200)
     else:
@@ -169,18 +244,19 @@ def _jabarset_value(current, before):
 
 
 def _id_beauty(source, db):
-    updated = parser.parse(source['metadata']['lastUpdatedAt']) \
-            .replace(tzinfo=None)
     if db == 0:
         confirmed = 0
         deaths = 0
         recovered = 0
         active_care = 0
+        updated = parser.parse(source['metadata']['lastUpdatedAt']) \
+            .replace(tzinfo=None)
     else:
         confirmed = db.confirmed
         deaths = db.deaths
         recovered = db.recovered
         active_care = db.active_care
+        updated = db.created
     return {
         "confirmed": {
             "value": source['confirmed']['value'],
@@ -272,7 +348,9 @@ def _odi_api(state):
 
 def _response(data, responseCode):
     if is_bot():
-        return jsonify(message=bot.id(data)), responseCode
+        return jsonify(
+            message=bot.id(data),
+            images=[url_for('indonesia.graph', _external=True)]), responseCode
     else:
         return jsonify(data), responseCode
 
