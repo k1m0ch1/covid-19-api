@@ -118,8 +118,7 @@ def odi_api(state):
                     result["metadata"]["source_date"] = \
                         row.created.isoformat()
 
-    if todayIsNone:
-        with helper.transaction() as tx:
+        if todayIsNone:
             new_status = Status(
                 confirmed=hasil["kasusPosi"],
                 deaths=hasil["kasusMeni"],
