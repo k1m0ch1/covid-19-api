@@ -1,5 +1,9 @@
+import contextlib
+
 from datetime import datetime, timedelta
 from flask import request
+
+from src.db import session
 
 TODAY = datetime.utcnow().date()
 
@@ -30,6 +34,27 @@ def is_not_bot():
 
 def gen(number):
     return f"{int(number):,}".replace(",", ".")
+
+
+@contextlib.contextmanager
+def transaction(factory=session):
+    """
+    Context manager for a transaction block.
+    It is mean to be used outside of a request context.
+
+        with transaction() as tx:
+            tx.add(Object())
+    """
+
+    tx = factory()
+    try:
+        yield tx
+        tx.commit()
+    except BaseException:
+        tx.rollback()
+        raise
+    finally:
+        tx.close()
 
 
 DAERAH = {
