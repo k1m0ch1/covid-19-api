@@ -1,33 +1,26 @@
 import requests
-import math
-from base64 import b64decode, b64encode
 from wand.image import Image
 from flask import Blueprint, jsonify, Response, url_for
 from datetime import datetime, timedelta
 from dateutil import parser
-
-import time
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.action_chains import ActionChains
+from base64 import b64decode
 
 from src.cache import cache
 from src.db import session
 from src.limit import limiter
 from src.models import Status, Attachment
+from src import seeder
 from src.helper import (
     is_empty, is_bot, is_not_bot,
     TODAY_STR, TODAY, YESTERDAY_STR,
     DAERAH
 )
-from src import bot
-from src import config
+from src import bot, config, crawler
 
 indonesia = Blueprint('indonesia', __name__)
 JABAR = 'https://coredata.jabarprov.go.id/analytics/covid19/aggregation.json'
-ODI_API = 'https://indonesia-covid-19.mathdro.id/api/provinsi'
+
 KAWAL_COVID = "https://kawalcovid19.harippe.id/api/summary"
-STATISTIK_URL = 'https://kawalcovid19.blob.core.windows.net/viz/statistik_harian.html' # noqa
 CONTACT = "https://pikobar.jabarprov.go.id/contact/"
 DATASET_CONFIRMED = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv" # noqa
 DATASET_RECOVERED = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv" # noqa
@@ -52,47 +45,7 @@ def graph():
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
 def seed():
-    # seed the statistic graph
-    options = webdriver.ChromeOptions()
-    options.headless = True
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--disable-software-rasterizer")
-    options.add_argument("--disable-dev-shm-usage")
-    driver = webdriver.Chrome(config.CHROMEDRIVER, options=options)
-    driver.get(STATISTIK_URL)
-    time.sleep(15)
-    driver.set_window_size(1600, 1200)
-    image = driver.find_element_by_tag_name('body')
-    ActionChains(driver).move_to_element(image).perform()
-    src_base64 = driver.get_screenshot_as_base64()
-    scr_png = b64decode(src_base64)
-    scr_img = Image(blob=scr_png)
-
-    x = image.location["x"]
-    y = image.location["y"] + 510
-    w = image.size["width"] - 720
-    h = image.size["height"] - 757
-    scr_img.crop(
-        left=math.floor(x),
-        top=math.floor(y),
-        width=math.ceil(w),
-        height=math.ceil(h),
-    )
-
-    encoded_data = b64encode(scr_img.make_blob()).decode("utf-8")
-
-    save_attachment = Attachment(
-        key="graph.harian",
-        attachment=encoded_data
-    )
-
-    session.add(save_attachment)
-
-    # seed the province
-    for province in DAERAH:
-       nothing = _odi_api(province) # noqa
-    return jsonify(message="Seed done"), 200
+    seeder.seed()
 
 
 @indonesia.route('/')
@@ -149,7 +102,19 @@ def id():
 @limiter.limit(f"1/{sLIMITER}second", key_func=lambda: is_bot(), exempt_when=lambda: is_not_bot()) # noqa
 @cache.cached(timeout=50)
 def jabar():
-    result = _default_resp()
+    result = {
+        "tanggal": {"value": ""},
+        "total_sembuh": {"value": 0, "diff": 0},
+        "total_positif": {"value": 0, "diff": 0},
+        "total_meninggal": {"value": 0, "diff": 0},
+        "proses_pemantauan": {"value": 0},
+        "proses_pengawasan": {"value": 0},
+        "selesai_pemantauan": {"value": 0},
+        "selesai_pengawasan": {"value": 0},
+        "total_odp": {"value": 0},
+        "total_pdp": {"value": 0},
+        "source": {"value": ""}
+    }
 
     response = requests.get(JABAR)
     if not response.status_code == 200:
@@ -180,7 +145,15 @@ def jabar():
 @cache.cached(timeout=50)
 def province(province):
     if province in DAERAH:
-        return _odi_api(province)
+        result = crawler.odi_api(province)
+        if len(result) == 0:
+            return jsonify(message="Not Found"), 404
+
+        if is_bot():
+            return jsonify(message=bot.province(result)), 200
+        else:
+            return jsonify(result), 200
+
     if province == "list":
         provinsi = [item for item in DAERAH]
         if True:
@@ -193,22 +166,6 @@ def province(province):
 @indonesia.errorhandler(429)
 def ratelimit_handler(e):
     return jsonify({"message": "Rate Limited"}), 429
-
-
-def _default_resp():
-    return {
-        "tanggal": {"value": ""},
-        "total_sembuh": {"value": 0, "diff": 0},
-        "total_positif": {"value": 0, "diff": 0},
-        "total_meninggal": {"value": 0, "diff": 0},
-        "proses_pemantauan": {"value": 0},
-        "proses_pengawasan": {"value": 0},
-        "selesai_pemantauan": {"value": 0},
-        "selesai_pengawasan": {"value": 0},
-        "total_odp": {"value": 0},
-        "total_pdp": {"value": 0},
-        "source": {"value": ""}
-    }
 
 
 def _search_list(list, key, status_date):
@@ -279,71 +236,6 @@ def _id_beauty(source, db):
             "last_updated": updated.isoformat()
         }
     }
-
-
-def _odi_api(state):
-    req = requests.get(ODI_API)
-    if not req.status_code == 200:
-        jsonify({"message": f"Error when trying to crawl {ODI_API}"}), 404
-    prov = {prov["provinsi"]: prov for prov in req.json()["data"]}
-    hasil = prov[DAERAH[state]]
-    todayIsNone = True
-
-    result = _default_resp()
-    result['metadata'] = {
-        "source": "https://indonesia-covid-19.mathdro.id/",
-        "province": DAERAH[state].upper()
-    }
-
-    get_state = session.query(Status) \
-        .filter(Status.country_id == f"id.{state}") \
-        .order_by(Status.created.desc()) \
-        .all()
-
-    if len(get_state) > 0:
-        for row in get_state:
-            if not row.created.date() == datetime.utcnow().date():
-                result["total_sembuh"]["diff"] = \
-                    hasil["kasusSemb"] - row.recovered
-                result["total_positif"]["diff"] = \
-                    hasil["kasusPosi"] - row.confirmed
-                result["total_meninggal"]["diff"] = \
-                    hasil["kasusMeni"] - row.deaths
-                result["metadata"]["diff_date"] = \
-                    row.created.isoformat()
-                result["metadata"]["source_date"] = \
-                    datetime.utcnow().isoformat()
-                break
-            else:
-                todayIsNone = False
-                result["metadata"]["source_date"] = \
-                    row.created.isoformat()
-
-    if todayIsNone:
-        new_status = Status(
-            confirmed=hasil["kasusPosi"],
-            deaths=hasil["kasusMeni"],
-            recovered=hasil["kasusSemb"],
-            active_care=0,
-            country_id=f"id.{state}",
-            created=datetime.utcnow(),
-            updated=datetime.utcnow()
-        )
-        session.add(new_status)
-        result["metadata"]["source_date"] = \
-            datetime.utcnow().isoformat()
-
-    result["total_sembuh"]["value"] = hasil["kasusSemb"]
-    result["total_positif"]["value"] = hasil["kasusPosi"]
-    result["total_meninggal"]["value"] = hasil["kasusMeni"]
-
-    if len(result) == 0:
-        jsonify({"message": "Not Found"}), 404
-
-    if is_bot():
-        return jsonify(message=bot.province(result)), 200
-    else:
-        return jsonify(result), 200
 
 
 def _response(data, responseCode):

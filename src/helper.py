@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 from flask import request
 
-
 TODAY = datetime.utcnow().date()
 
 YESTERDAY_STR = {

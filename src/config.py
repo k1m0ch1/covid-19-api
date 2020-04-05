@@ -14,3 +14,4 @@ NEWSAPI_HOST = _('NEWSAPI_HOST', "http://newsapi.org/v2/top-headlines")
 sLIMITER = 5
 
 CHROMEDRIVER = _('CHROMEDRIVER', "./chromedriver")
+STATISTIK_URL = 'https://kawalcovid19.blob.core.windows.net/viz/statistik_harian.html' # noqa

@@ -2,6 +2,7 @@ import fire
 import os
 
 from src.wsgi import app
+from src import seeder
 
 
 def run_scrapper():
@@ -24,6 +25,10 @@ def run_web_prod():
     ])
 
 
+def run_seed():
+    seeder.seed()
+
+
 def test():
     print("unittest")
 
@@ -34,3 +39,4 @@ def _execvp(args):
 
 if __name__ == '__main__':
     fire.Fire()
+
