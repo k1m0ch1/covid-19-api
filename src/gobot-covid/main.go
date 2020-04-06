@@ -19,8 +19,7 @@ import (
 	whatsapp "github.com/Rhymen/go-whatsapp"
 )
 
-// var mainApi = "https://covid19-api.yggdrasil.id"
-var mainApi = "http://localhost:5001"
+var mainApi = "https://covid19-api.yggdrasil.id"
 var userAgent = "gobot-covid19/3.0"
 
 type waHandler struct {
