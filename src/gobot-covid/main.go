@@ -19,7 +19,8 @@ import (
 	whatsapp "github.com/Rhymen/go-whatsapp"
 )
 
-var mainApi = "https://covid19-api.yggdrasil.id"
+// var mainApi = "https://covid19-api.yggdrasil.id"
+var mainApi = "http://localhost:5001"
 var userAgent = "gobot-covid19/3.0"
 
 type waHandler struct {
@@ -53,6 +54,7 @@ func (wh *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
 		log.Printf("Error, %d when access %s ", err, link)
 		return
 	}
+
 	var result map[string]interface {}
 
 	jsonErr := json.Unmarshal(body, &result)
@@ -62,23 +64,19 @@ func (wh *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
 	}
 
 	messages := result["message"]
-	images := result["images"].([]interface {})
-	isImages := false
-	if len(images) > 0{
-		isImages = true
-	}
 
 	reply = messages.(string)
 
 	if reply != "timeout" {
 		go sendMessage(wh.c, reply, message.Info.RemoteJid)
 
-		if isImages {
+		if images, ok := result["images"].([]interface {}); ok {
 			for index := range(images){
 				go sendImage(wh.c, message.Info.RemoteJid, images[index].(string))
 			}
 		}
 	}
+
 }
 
 

@@ -154,7 +154,7 @@ def province(province):
         else:
             return jsonify(result), 200
 
-    if province == "list":
+    if province == "prov" or province == "list":
         provinsi = [item for item in DAERAH]
         if True:
             return jsonify(message=bot.province_list(provinsi)), 200

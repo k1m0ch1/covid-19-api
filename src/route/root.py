@@ -147,6 +147,18 @@ def all_data():
     return jsonify(_get_today()), 200
 
 
+@root.route('/hi')
+@root.route('/hello')
+@root.route('/halo')
+@root.route('/help')
+@root.route('/hola')
+@cache.cached(timeout=50)
+def introduction():
+    if is_bot():
+        return jsonify(message=bot.introduction()), 200
+    return jsonify(message="Not Found"), 404
+
+
 def _get_today(**kwargs):
     now_data = TODAY_STR['hyphen']
     prev_data = YESTERDAY_STR['hyphen']

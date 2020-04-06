@@ -96,3 +96,12 @@ def hotline(data):
         result += "\n\n"
     return result
 
+
+def introduction():
+    return "*Halo* 🤗\n\nPerkenalan saya robot covid-19 untuk mendapatkan informasi tentang covid," \
+		"panggil saya menggunakan awalan !covid\n\nPerintah yang tersedia :\n1. status (global cases)\n" \
+		"2. hotline\n3. news \n4. id (indonesia cases)" \
+		"\n5. id <jabar, prov, jakarta>" \
+		"\n6. id info\n7. id news (top headline news indonesia)" \
+		"\n8. halo\n\nContoh : !covid id jabar\n" \
+		"\n\nBantu kami di https://git.io/JvPbJ ❤️"
