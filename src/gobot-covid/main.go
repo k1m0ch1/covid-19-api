@@ -69,7 +69,8 @@ func (wh *waHandler) HandleTextMessage(message whatsapp.TextMessage) {
 	if reply != "timeout" {
 		go sendMessage(wh.c, reply, message.Info.RemoteJid)
 
-		if images, ok := result["images"].([]interface {}); ok {
+		if _, ok := result["images"]; ok {
+			images := result["images"].([]interface {})
 			for index := range(images){
 				go sendImage(wh.c, message.Info.RemoteJid, images[index].(string))
 			}
