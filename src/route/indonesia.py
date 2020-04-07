@@ -130,14 +130,26 @@ def jabar():
             json_resp, "tanggal",
             datetime.strftime(TODAY - timedelta(days=2), "%d-%m-%Y"))
         result = _jabarset_value(yeday_stat, twodaysago)
+        result['metadata'] = {
+            "source": "https://pikobar.jabarprov.go.id",
+            "province": "Jawa Barat",
+            "source_date": YESTERDAY_STR['hyphen-dmy'],
+        }
     else:
         result = _jabarset_value(today_stat, yeday_stat)
+        result['metadata'] = {
+            "source": "https://pikobar.jabarprov.go.id",
+            "province": "Jawa Barat",
+            "source_date": TODAY_STR['hyphen-dmy'],
+        }
 
     if len(result) == 0:
         jsonify({"message": "Not Found"}), 404
 
-    result['source'] = {"value": "https://pikobar.jabarprov.go.id/"}
-    return jsonify(result), 200
+    if is_bot():
+        return jsonify(message=bot.jabar(result)), 200
+    else:
+        return jsonify(result), 200
 
 
 @indonesia.route('/<province>')
@@ -156,7 +168,7 @@ def province(province):
 
     if province == "prov" or province == "list":
         provinsi = [item for item in DAERAH]
-        if True:
+        if is_bot():
             return jsonify(message=bot.province_list(provinsi)), 200
         else:
             return jsonify([item for item in DAERAH]), 200

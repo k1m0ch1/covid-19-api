@@ -64,6 +64,39 @@ def province(data):
     return f"{result}\n\n{sembuh}\n{positif}\n{meninggal}\n\n{footer}"
 
 
+def jabar(data):
+    waktu = dateutil.parser.parse(data['metadata']['source_date']) + timedelta(hours=7)
+    waktu = datetime.strftime(waktu, "%d %b %Y %H:%M")
+
+    result = f"*{data['metadata']['province']}*"
+
+    s_diff = int(data['total_sembuh']['value']-data['total_sembuh']['diff'])
+    sembuh_diff = f"*(+{gen(s_diff)})*" if s_diff > 0 else ""
+    sembuh = f"Sembuh: {gen(data['total_sembuh']['value'])} {sembuh_diff}"
+
+    p_diff = data['total_positif_saat_ini']['value']-data['total_positif_saat_ini']['diff']
+    positif_diff = f"*(+{gen(p_diff)})*" if p_diff > 0 else ""
+    positif = f"Positif: {gen(data['total_positif_saat_ini']['value'])} {positif_diff}"
+
+    m_diff = data['total_meninggal']['value'] - data['total_meninggal']['diff']
+    meninggal_diff = f"*(+{gen(m_diff)})*" if m_diff > 0 else ""
+    meninggal = f"Meninggal: {gen(data['total_meninggal']['value'])} {meninggal_diff}"
+
+    proses_pemantauan = f'Proses Pemantauan: {gen(data["proses_pemantauan"]["value"])}'
+    selesai_pemantauan = f'Selesai Pemantauan: {gen(data["selesai_pemantauan"]["value"])}'
+
+    proses_pengawasan = f'Proses Pengawasan: {gen(data["proses_pengawasan"]["value"])}'
+    selesai_pengawasan = f'Selesai Pengawasan: {gen(data["selesai_pengawasan"]["value"])}'
+
+    odp = f'ODP: {gen(data["total_odp"]["value"])}'
+    pdp = f'PDP: {gen(data["total_pdp"]["value"])}'
+
+    footer = f"Update Terakhir {waktu}\nSumber data : {data['metadata']['source']}"
+
+    return f"{result}\n\n{sembuh}\n{positif}\n{meninggal}\n{proses_pemantauan}\n{selesai_pemantauan}\n" \
+           f"{proses_pengawasan}\n{selesai_pengawasan}\n{odp}\n{pdp}\n\n{footer}"
+
+
 def province_list(data):
     header = "*List Provinsi yang tersedia*"
     footer = "Contoh Penggunaan : *!covid id papua*"
